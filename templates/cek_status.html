@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Klaim.id - Cek Status Pengajuan{% endblock %}
+{% block page_title %}Cek Status Pengajuan{% endblock %}
+{% block page_subtitle %}Masukkan ID Pengajuan Anda untuk melacak status rembesan{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+    <form action="{{ url_for('cek_status') }}" method="POST">
+        <div class="form-group">
+            <label for="id_pengajuan">ID Pengajuan</label>
+            <div style="display: flex; gap: 1rem;">
+                <input type="text" id="id_pengajuan" name="id_pengajuan" class="form-control" placeholder="Contoh: #5" required style="flex: 1;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-search-line"></i> Cari
+                </button>
+            </div>
+        </div>
+    </form>
+
+    {% if pengajuan %}
+    <div style="margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; color: var(--text-main);">Hasil Pencarian (ID: #{{ pengajuan.id }})</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Nama Pengaju</p>
+                <p style="font-weight: 500;">{{ pengajuan.nama }}</p>
+            </div>
+            <div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Tanggal</p>
+                <p style="font-weight: 500;">{{ pengajuan.tanggal.split(' ')[0] }}</p>
+            </div>
+            <div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Kegiatan</p>
+                <p style="font-weight: 500;">{{ pengajuan.kegiatan }}</p>
+            </div>
+            <div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Nominal</p>
+                <p style="font-weight: 600; color: var(--primary-color);">Rp {{ "{:,.0f}".format(pengajuan.nominal).replace(',', '.') }}</p>
+            </div>
+        </div>
+
+        <div style="background: var(--bg-input); padding: 1.5rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Status Saat Ini</p>
+                <span class="status-badge status-{{ pengajuan.status | lower }}" style="font-size: 1rem;">
+                    {{ pengajuan.status }}
+                </span>
+            </div>
+            
+            {% if pengajuan.status == 'Approved' and pengajuan.bukti_tf_path %}
+            <div style="text-align: right;">
+                <p style="font-size: 0.85rem; color: var(--success-color); margin-bottom: 0.5rem;">Dana telah ditransfer!</p>
+                <a href="{{ pengajuan.bukti_tf_path if pengajuan.bukti_tf_path.startswith('http') else url_for('static', filename='uploads/' + pengajuan.bukti_tf_path) }}" target="_blank" class="btn btn-sm" style="background: var(--success-light); color: var(--success-color); border: 1px solid var(--success-color);">
+                    <i class="ri-check-double-line"></i> Lihat Bukti Transfer
+                </a>
+            </div>
+            {% elif pengajuan.status == 'Pending' %}
+            <div style="text-align: right; color: var(--text-muted); font-size: 0.9rem;">
+                <i class="ri-time-line"></i> Sedang diproses...
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
