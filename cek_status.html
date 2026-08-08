@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klaim.id - Cek Status Pengajuan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="static/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="static/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="ri-wallet-3-fill"></i></div>
+                <span>Klaim.id</span>
+            </div>
+            <ul class="nav-links">
+                <li>
+                    <a href="index.html">
+                        <i class="ri-file-add-line"></i>
+                        <span>Pengajuan</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin.html">
+                        <i class="ri-dashboard-line"></i>
+                        <span>Dashboard Admin</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="greeting">
+                    <h1>Cek Status Pengajuan</h1>
+                    <p>Masukkan ID Pengajuan Anda untuk melacak status rembesan</p>
+                </div>
+                <div class="profile-section">
+                    <div class="notification-icon" onclick="toggleTheme()" title="Ganti Tema">
+                        <i id="theme-icon" class="ri-sun-line"></i>
+                    </div>
+                    <div class="avatar">
+                        <img src="https://ui-avatars.com/api/?name=User&background=random" alt="User Avatar">
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div id="alert-container"></div>
+                
+                <div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+                    <form id="cekStatusForm">
+                        <div class="form-group">
+                            <label for="id_pengajuan">ID Pengajuan</label>
+                            <div style="display: flex; gap: 1rem;">
+                                <input type="text" id="id_pengajuan" class="form-control" placeholder="Contoh: 123456" required style="flex: 1;">
+                                <button type="submit" class="btn btn-primary" id="searchBtn">
+                                    <i class="ri-search-line"></i> Cari
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="result-container" style="display: none; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                        <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; color: var(--text-main);">Hasil Pencarian (ID: <span id="res-id"></span>)</h3>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Nama Pengaju</p>
+                                <p style="font-weight: 500;" id="res-nama"></p>
+                            </div>
+                            <div>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Tanggal</p>
+                                <p style="font-weight: 500;" id="res-tanggal"></p>
+                            </div>
+                            <div>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Kegiatan</p>
+                                <p style="font-weight: 500;" id="res-kegiatan"></p>
+                            </div>
+                            <div>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Nominal</p>
+                                <p style="font-weight: 600; color: var(--primary-color);" id="res-nominal"></p>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--bg-input); padding: 1.5rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Status Saat Ini</p>
+                                <span id="res-status-badge" class="status-badge" style="font-size: 1rem;"></span>
+                            </div>
+                            
+                            <div id="res-tf-container" style="text-align: right; display: none;">
+                                <p style="font-size: 0.85rem; color: var(--success-color); margin-bottom: 0.5rem;">Dana telah ditransfer!</p>
+                                <a href="#" id="res-tf-link" target="_blank" class="btn btn-sm" style="background: var(--success-light); color: var(--success-color); border: 1px solid var(--success-color);">
+                                    <i class="ri-check-double-line"></i> Lihat Bukti Transfer
+                                </a>
+                            </div>
+                            
+                            <div id="res-pending-container" style="text-align: right; color: var(--text-muted); font-size: 0.9rem; display: none;">
+                                <i class="ri-time-line"></i> Sedang diproses...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFRB99mQq3xPNBXgEflsMura3CJvOLpwBey3rfc_MshgUtvsDT28PwTvs8N5lQbezeag/exec';
+        
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            const icon = type === 'success' ? 'ri-checkbox-circle-line' : 'ri-error-warning-line';
+            container.innerHTML = `
+                <div class="alert alert-${type}" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; padding: 1rem; border-radius: 8px;">
+                    <i class="${icon}"></i> ${message}
+                </div>
+            `;
+            setTimeout(() => { container.innerHTML = ''; }, 5000);
+        }
+        
+        function formatRupiah(angka) {
+            return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        
+        document.getElementById('cekStatusForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (SCRIPT_URL === 'GANTI_DENGAN_URL_WEB_APP_ANDA') {
+                showAlert('Silakan set SCRIPT_URL terlebih dahulu di dalam kode', 'error');
+                return;
+            }
+            
+            let reqId = document.getElementById('id_pengajuan').value.replace('#', '').trim();
+            const btn = document.getElementById('searchBtn');
+            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i>';
+            btn.disabled = true;
+            document.getElementById('result-container').style.display = 'none';
+            
+            try {
+                const response = await fetch(SCRIPT_URL + '?action=status&id=' + encodeURIComponent(reqId));
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const data = result.data;
+                    document.getElementById('result-container').style.display = 'block';
+                    document.getElementById('res-id').innerText = '#' + data['ID'];
+                    document.getElementById('res-nama').innerText = data['Nama'];
+                    
+                    // Format Date
+                    let dateStr = data['Tanggal'];
+                    if (typeof dateStr === 'string') dateStr = dateStr.split('T')[0];
+                    document.getElementById('res-tanggal').innerText = dateStr;
+                    
+                    document.getElementById('res-kegiatan').innerText = data['Kegiatan'];
+                    document.getElementById('res-nominal').innerText = formatRupiah(data['Nominal']);
+                    
+                    const badge = document.getElementById('res-status-badge');
+                    badge.innerText = data['Status'];
+                    badge.className = 'status-badge status-' + data['Status'].toLowerCase();
+                    
+                    document.getElementById('res-tf-container').style.display = 'none';
+                    document.getElementById('res-pending-container').style.display = 'none';
+                    
+                    if (data['Status'] === 'Approved' && data['Bukti_TF_Path']) {
+                        document.getElementById('res-tf-container').style.display = 'block';
+                        document.getElementById('res-tf-link').href = data['Bukti_TF_Path'];
+                    } else if (data['Status'] === 'Pending') {
+                        document.getElementById('res-pending-container').style.display = 'block';
+                    }
+                } else {
+                    showAlert(result.message || 'ID Pengajuan tidak ditemukan', 'error');
+                }
+            } catch (error) {
+                showAlert('Terjadi kesalahan jaringan.', 'error');
+            }
+            
+            btn.innerHTML = '<i class="ri-search-line"></i> Cari';
+            btn.disabled = false;
+        });
+        
+        // Theme logic
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('theme-icon').className = newTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line';
+        }
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.getElementById('theme-icon').className = savedTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line';
+        });
+    </script>
+</body>
+</html>

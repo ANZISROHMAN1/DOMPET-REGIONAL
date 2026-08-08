@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klaim.id - Form Pengajuan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="static/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="static/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="ri-wallet-3-fill"></i></div>
+                <span>Klaim.id</span>
+            </div>
+            <ul class="nav-links">
+                <li>
+                    <a href="index.html" class="active">
+                        <i class="ri-file-add-line"></i>
+                        <span>Pengajuan</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin.html">
+                        <i class="ri-dashboard-line"></i>
+                        <span>Dashboard Admin</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="greeting">
+                    <h1>Form Pengajuan Rembes</h1>
+                    <p>Isi data di bawah ini untuk mengajukan klaim baru</p>
+                </div>
+                <div class="profile-section">
+                    <div class="notification-icon" onclick="toggleTheme()" title="Ganti Tema">
+                        <i id="theme-icon" class="ri-sun-line"></i>
+                    </div>
+                    <div class="avatar">
+                        <img src="https://ui-avatars.com/api/?name=User&background=random" alt="User Avatar">
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div id="alert-container"></div>
+                
+                <div class="glass-card" style="max-width: 800px; display: block;" id="form-container">
+                    <form id="klaimForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nama">Nama Lengkap</label>
+                                <input type="text" id="nama" class="form-control" placeholder="Masukkan nama Anda" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="nominal">Nominal Rembes (Rp)</label>
+                                <input type="number" id="nominal" class="form-control" placeholder="Contoh: 150000" required min="1">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bank">Tujuan Bank Rembes</label>
+                                <input type="text" id="bank" class="form-control" placeholder="Contoh: BCA, Mandiri" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="rekening">Nomer Rekening</label>
+                                <input type="text" id="rekening" class="form-control" placeholder="Contoh: 1234567890" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="kegiatan">Deskripsi Kegiatan</label>
+                            <input type="text" id="kegiatan" class="form-control" placeholder="Contoh: Beli keperluan ATK kantor" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Bukti Nota (JPG, PNG, PDF)</label>
+                            <div class="file-upload-wrapper" id="uploadWrapper">
+                                <div class="file-upload-icon">
+                                    <i class="ri-upload-cloud-2-line"></i>
+                                </div>
+                                <div class="file-upload-text" id="fileText">
+                                    Klik atau drag file ke area ini untuk upload
+                                </div>
+                                <input type="file" id="bukti" accept=".jpg,.jpeg,.png,.pdf" required onchange="updateFileName(this)">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                            <a href="cek_status.html" class="btn" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                                <i class="ri-search-line"></i> Cek Status
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="ri-send-plane-fill"></i> Kirim Pengajuan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="glass-card" style="max-width: 800px; display: none; text-align: center; padding: 3rem 2rem;" id="success-container">
+                    <div style="font-size: 4rem; color: var(--success-color); margin-bottom: 1rem;">
+                        <i class="ri-checkbox-circle-fill"></i>
+                    </div>
+                    <h2 style="margin-bottom: 0.5rem;">Pengajuan Berhasil!</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 2rem;">Pengajuan rembes Anda telah kami terima dan akan segera diproses.</p>
+                    
+                    <div style="background: var(--bg-input); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px dashed var(--border-color);">
+                        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">ID Pengajuan Anda:</p>
+                        <h3 style="font-size: 2rem; color: var(--primary-color); letter-spacing: 2px;" id="success-id">#123456</h3>
+                        <p style="font-size: 0.85rem; color: var(--danger-color); margin-top: 0.5rem; font-weight: 500;">
+                            <i class="ri-error-warning-line"></i> Mohon simpan ID ini untuk mengecek status pencairan.
+                        </p>
+                    </div>
+                    
+                    <a href="index.html" class="btn btn-primary">
+                        <i class="ri-arrow-left-line"></i> Kembali ke Form
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFRB99mQq3xPNBXgEflsMura3CJvOLpwBey3rfc_MshgUtvsDT28PwTvs8N5lQbezeag/exec';
+        
+        function updateFileName(input) {
+            const textElement = document.getElementById('fileText');
+            const wrapper = document.getElementById('uploadWrapper');
+            if (input.files && input.files[0]) {
+                textElement.innerHTML = `<strong>${input.files[0].name}</strong> dipilih.`;
+                wrapper.style.borderColor = 'var(--primary-color)';
+                wrapper.style.backgroundColor = 'var(--primary-light)';
+            } else {
+                textElement.innerHTML = 'Klik atau drag file ke area ini untuk upload';
+                wrapper.style.borderColor = 'var(--border-color)';
+                wrapper.style.backgroundColor = 'var(--bg-input)';
+            }
+        }
+        
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            const icon = type === 'success' ? 'ri-checkbox-circle-line' : 'ri-error-warning-line';
+            container.innerHTML = `
+                <div class="alert alert-${type}" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; padding: 1rem; border-radius: 8px;">
+                    <i class="${icon}"></i> ${message}
+                </div>
+            `;
+            setTimeout(() => { container.innerHTML = ''; }, 5000);
+        }
+        
+        document.getElementById('klaimForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (SCRIPT_URL === 'GANTI_DENGAN_URL_WEB_APP_ANDA') {
+                showAlert('Silakan set SCRIPT_URL terlebih dahulu di dalam kode index.html', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Memproses...';
+            btn.disabled = true;
+            
+            const fileInput = document.getElementById('bukti');
+            const file = fileInput.files[0];
+            
+            const payload = {
+                action: 'submit',
+                nama: document.getElementById('nama').value,
+                nominal: document.getElementById('nominal').value,
+                bank: document.getElementById('bank').value,
+                rekening: document.getElementById('rekening').value,
+                kegiatan: document.getElementById('kegiatan').value,
+                fileName: file.name,
+                mimeType: file.type
+            };
+            
+            // Convert file to Base64
+            const reader = new FileReader();
+            reader.onload = async function() {
+                payload.fileData = reader.result;
+                
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        document.getElementById('form-container').style.display = 'none';
+                        document.getElementById('success-container').style.display = 'block';
+                        document.getElementById('success-id').innerText = '#' + result.id;
+                    } else {
+                        showAlert('Gagal: ' + result.message, 'error');
+                        btn.innerHTML = '<i class="ri-send-plane-fill"></i> Kirim Pengajuan';
+                        btn.disabled = false;
+                    }
+                } catch (error) {
+                    showAlert('Terjadi kesalahan jaringan.', 'error');
+                    btn.innerHTML = '<i class="ri-send-plane-fill"></i> Kirim Pengajuan';
+                    btn.disabled = false;
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Theme logic
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('theme-icon').className = newTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line';
+        }
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.getElementById('theme-icon').className = savedTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line';
+        });
+    </script>
+</body>
+</html>

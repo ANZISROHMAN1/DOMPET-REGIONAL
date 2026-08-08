@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klaim.id - Dashboard Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="static/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="static/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
+    <style>
+        .login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-main); z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .login-card {
+            background: var(--bg-card); padding: 2rem; border-radius: 12px;
+            width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color); text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card">
+            <div style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"><i class="ri-admin-fill"></i></div>
+            <h2 style="margin-bottom: 1.5rem;">Login Admin</h2>
+            <form id="loginForm">
+                <div class="form-group" style="text-align: left;">
+                    <label>Password</label>
+                    <input type="password" id="adminPwd" class="form-control" placeholder="Masukkan password admin" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+            </form>
+            <p id="login-error" style="color: var(--danger-color); margin-top: 1rem; display: none;">Password salah!</p>
+        </div>
+    </div>
+
+    <div class="app-container" id="admin-app" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="ri-wallet-3-fill"></i></div>
+                <span>Klaim.id</span>
+            </div>
+            <ul class="nav-links">
+                <li>
+                    <a href="index.html">
+                        <i class="ri-file-add-line"></i>
+                        <span>Pengajuan</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin.html" class="active">
+                        <i class="ri-dashboard-line"></i>
+                        <span>Dashboard Admin</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="greeting">
+                    <h1>Dashboard Admin</h1>
+                    <p>Monitoring dan pengelolaan pengajuan reimbursement</p>
+                </div>
+                <div class="profile-section">
+                    <div class="notification-icon" onclick="toggleTheme()" title="Ganti Tema">
+                        <i id="theme-icon" class="ri-sun-line"></i>
+                    </div>
+                    <div class="avatar">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="Admin Avatar">
+                    </div>
+                    <a href="#" onclick="logout()" style="margin-left: 1rem; color: var(--danger-color); text-decoration: none; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 0.3rem;">
+                        <i class="ri-logout-box-r-line"></i> Logout
+                    </a>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div id="alert-container"></div>
+                
+                <!-- Stats Row -->
+                <div class="dashboard-stats">
+                    <div class="stat-card" style="cursor: pointer; transition: transform 0.2s;" onclick="filterTable('all')" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <div class="stat-icon blue">
+                            <i class="ri-file-list-3-line"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3 id="stat-total">0</h3>
+                            <p>Total Pengajuan</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card" style="cursor: pointer; transition: transform 0.2s;" onclick="filterTable('Pending')" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <div class="stat-icon orange">
+                            <i class="ri-time-line"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3 id="stat-pending">0</h3>
+                            <p>Menunggu Konfirmasi</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card" style="cursor: pointer; transition: transform 0.2s;" onclick="filterTable('Approved')" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <div class="stat-icon green">
+                            <i class="ri-check-double-line"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3 id="stat-approved">0</h3>
+                            <p>Telah Dibayar</p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="section-divider">
+
+                <!-- History Table -->
+                <div class="glass-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                        <h2 style="font-size: 1.25rem; font-weight: 600;">Riwayat Pengajuan</h2>
+                        <button onclick="fetchData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tanggal</th>
+                                    <th>Nama</th>
+                                    <th>Kegiatan</th>
+                                    <th>Nominal</th>
+                                    <th>Bank & Rekening</th>
+                                    <th>Bukti</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <tr>
+                                    <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                        <i class="ri-loader-4-line ri-spin" style="font-size: 2rem;"></i><br>Memuat data...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden form for TF upload -->
+    <input type="file" id="tf-upload-input" accept="image/*,.pdf" style="display: none;">
+
+    <script>
+        // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFRB99mQq3xPNBXgEflsMura3CJvOLpwBey3rfc_MshgUtvsDT28PwTvs8N5lQbezeag/exec';
+        
+        let currentData = [];
+        let pendingUpdateRowId = null;
+        let pendingUpdateStatus = null;
+
+        // Simple auth
+        const ADMIN_PWD = 'admin123';
+        
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (document.getElementById('adminPwd').value === ADMIN_PWD) {
+                localStorage.setItem('admin_logged_in', 'true');
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('admin-app').style.display = 'flex';
+                fetchData();
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('admin_logged_in');
+            location.reload();
+        }
+
+        function checkAuth() {
+            if (localStorage.getItem('admin_logged_in') === 'true') {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('admin-app').style.display = 'flex';
+                fetchData();
+            }
+        }
+        
+        function formatRupiah(angka) {
+            return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            const icon = type === 'success' ? 'ri-checkbox-circle-line' : 'ri-error-warning-line';
+            container.innerHTML = `
+                <div class="alert alert-${type}" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; padding: 1rem; border-radius: 8px;">
+                    <i class="${icon}"></i> ${message}
+                </div>
+            `;
+            setTimeout(() => { container.innerHTML = ''; }, 5000);
+        }
+
+        async function fetchData() {
+            if (SCRIPT_URL === 'GANTI_DENGAN_URL_WEB_APP_ANDA') {
+                showAlert('Silakan set SCRIPT_URL terlebih dahulu', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(SCRIPT_URL + '?action=list');
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentData = result.data;
+                    renderTable(currentData);
+                    updateStats(currentData);
+                } else {
+                    showAlert('Gagal memuat data.', 'error');
+                }
+            } catch (error) {
+                showAlert('Terjadi kesalahan jaringan.', 'error');
+            }
+        }
+
+        function updateStats(data) {
+            document.getElementById('stat-total').innerText = data.length;
+            document.getElementById('stat-pending').innerText = data.filter(d => d.Status === 'Pending').length;
+            document.getElementById('stat-approved').innerText = data.filter(d => d.Status === 'Approved').length;
+        }
+
+        function filterTable(status) {
+            if (status === 'all') {
+                renderTable(currentData);
+            } else {
+                renderTable(currentData.filter(d => d.Status === status));
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('table-body');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);"><i class="ri-inbox-line" style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem; color: #d1d5db;"></i>Belum ada data pengajuan</td></tr>`;
+                return;
+            }
+            
+            let html = '';
+            data.forEach(item => {
+                let dateStr = item.Tanggal;
+                if (typeof dateStr === 'string') dateStr = dateStr.split('T')[0];
+                
+                let actionHtml = '';
+                if (item.Status === 'Pending') {
+                    actionHtml = `
+                        <button onclick="triggerApprove(${item.row_index})" class="btn btn-sm btn-success" title="Approve & Upload TF"><i class="ri-upload-cloud-line"></i> TF</button>
+                        <button onclick="updateStatus(${item.row_index}, 'Rejected')" class="btn btn-sm btn-danger" title="Tolak"><i class="ri-close-line"></i></button>
+                    `;
+                } else {
+                    actionHtml = `<span style="color: var(--text-muted); font-size: 0.85rem;">-</span>`;
+                }
+                
+                let buktiHtml = '';
+                if (item.Bukti_Path) buktiHtml += `<a href="${item.Bukti_Path}" target="_blank" class="nota-link"><i class="ri-attachment-line"></i> Nota</a>`;
+                if (item.Bukti_TF_Path) buktiHtml += `<br><a href="${item.Bukti_TF_Path}" target="_blank" class="nota-link" style="color: var(--success-color);"><i class="ri-check-double-line"></i> Bukti TF</a>`;
+
+                html += `
+                <tr>
+                    <td>#${item.ID}</td>
+                    <td>${dateStr}</td>
+                    <td style="font-weight: 500;">${item.Nama}</td>
+                    <td>${item.Kegiatan}</td>
+                    <td style="font-weight: 600;">${formatRupiah(item.Nominal)}</td>
+                    <td>
+                        <div style="font-weight: 500;">${item.Bank}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">${item.Rekening}</div>
+                    </td>
+                    <td>${buktiHtml}</td>
+                    <td><span class="status-badge status-${item.Status.toLowerCase()}">${item.Status}</span></td>
+                    <td>${actionHtml}</td>
+                </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function triggerApprove(rowIndex) {
+            pendingUpdateRowId = rowIndex;
+            pendingUpdateStatus = 'Approved';
+            document.getElementById('tf-upload-input').click();
+        }
+
+        document.getElementById('tf-upload-input').addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                if (confirm('Kirim bukti transfer dan setujui pengajuan ini?')) {
+                    processUpdate(this.files[0]);
+                }
+                this.value = ''; // reset
+            }
+        });
+
+        async function updateStatus(rowIndex, status) {
+            if (confirm(`Yakin ingin mengubah status menjadi ${status}?`)) {
+                pendingUpdateRowId = rowIndex;
+                pendingUpdateStatus = status;
+                processUpdate(null);
+            }
+        }
+
+        async function processUpdate(file) {
+            const payload = {
+                action: 'update_status',
+                row_index: pendingUpdateRowId,
+                status: pendingUpdateStatus
+            };
+            
+            showAlert('Memproses update...', 'success');
+            
+            if (file) {
+                payload.fileName = file.name;
+                payload.mimeType = file.type;
+                
+                const reader = new FileReader();
+                reader.onload = async function() {
+                    payload.fileData = reader.result;
+                    sendUpdatePayload(payload);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                sendUpdatePayload(payload);
+            }
+        }
+
+        async function sendUpdatePayload(payload) {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Status berhasil diupdate!', 'success');
+                    fetchData(); // reload table
+                } else {
+                    showAlert('Gagal: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Terjadi kesalahan jaringan.', 'error');
+            }
+        }
+
+        // Theme logic
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('theme-icon').className = newTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line';
+        }
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.getElementById('theme-icon').className = savedTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line';
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
