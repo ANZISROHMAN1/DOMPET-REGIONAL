@@ -135,7 +135,13 @@
                 <div class="glass-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                         <h2 style="font-size: 1.25rem; font-weight: 600;">Riwayat Pengajuan</h2>
-                        <button onclick="fetchData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <input type="date" id="filter-start" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Tanggal Mulai">
+                            <span style="color: var(--text-muted);">sampai</span>
+                            <input type="date" id="filter-end" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Tanggal Akhir">
+                            <button onclick="applyFilters()" class="btn btn-sm btn-primary"><i class="ri-filter-3-line"></i> Filter</button>
+                            <button onclick="resetFilters()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
+                        </div>
                     </div>
                     
                     <div class="table-container">
@@ -177,6 +183,7 @@
         let currentData = [];
         let pendingUpdateRowId = null;
         let pendingUpdateStatus = null;
+        let currentStatusFilter = 'all';
 
         // Simple auth
         const ADMIN_PWD = 'admin123';
@@ -233,7 +240,7 @@
                 
                 if (result.success) {
                     currentData = result.data;
-                    renderTable(currentData);
+                    applyFilters();
                     updateStats(currentData);
                 } else {
                     showAlert('Gagal memuat data.', 'error');
@@ -250,11 +257,47 @@
         }
 
         function filterTable(status) {
-            if (status === 'all') {
-                renderTable(currentData);
-            } else {
-                renderTable(currentData.filter(d => d.Status === status));
+            currentStatusFilter = status;
+            applyFilters();
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-start').value = '';
+            document.getElementById('filter-end').value = '';
+            currentStatusFilter = 'all';
+            fetchData();
+        }
+
+        function applyFilters() {
+            let filtered = currentData;
+            
+            // 1. Filter by Status
+            if (currentStatusFilter !== 'all') {
+                filtered = filtered.filter(d => d.Status === currentStatusFilter);
             }
+            
+            // 2. Filter by Date Range
+            const startDate = document.getElementById('filter-start').value;
+            const endDate = document.getElementById('filter-end').value;
+            
+            if (startDate || endDate) {
+                filtered = filtered.filter(item => {
+                    let dateStr = item.Tanggal;
+                    if (typeof dateStr === 'string') dateStr = dateStr.split('T')[0];
+                    
+                    // Convert to pure YYYY-MM-DD for accurate comparison
+                    try {
+                        const itemDate = new Date(dateStr).toISOString().split('T')[0];
+                        if (startDate && itemDate < startDate) return false;
+                        if (endDate && itemDate > endDate) return false;
+                        return true;
+                    } catch(e) {
+                        return true; // if date is unparseable, include it
+                    }
+                });
+            }
+            
+            renderTable(filtered);
         }
 
         function renderTable(data) {
