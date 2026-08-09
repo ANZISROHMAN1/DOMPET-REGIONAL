@@ -81,6 +81,10 @@
                     <p>Monitoring dan pengelolaan pengajuan reimbursement</p>
                 </div>
                 <div class="profile-section">
+                    <div class="notification-icon" style="position: relative;" onclick="resetNotifBadge()" title="Notifikasi Baru">
+                        <i class="ri-notification-3-line"></i>
+                        <span id="notif-badge" style="display: none; position: absolute; top: -5px; right: -5px; background: var(--danger-color); color: white; border-radius: 50%; font-size: 0.65rem; width: 16px; height: 16px; align-items: center; justify-content: center; font-weight: bold;">0</span>
+                    </div>
                     <div class="notification-icon" onclick="toggleTheme()" title="Ganti Tema">
                         <i id="theme-icon" class="ri-sun-line"></i>
                     </div>
@@ -184,6 +188,10 @@
         let pendingUpdateRowId = null;
         let pendingUpdateStatus = null;
         let currentStatusFilter = 'all';
+        let lastTotalCount = 0;
+        let autoRefreshInterval = null;
+        let isFirstLoad = true;
+        let unreadNotifCount = 0;
 
         // Simple auth
         const ADMIN_PWD = 'admin123';
@@ -195,6 +203,7 @@
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('admin-app').style.display = 'flex';
                 fetchData();
+                startAutoRefresh();
             } else {
                 document.getElementById('login-error').style.display = 'block';
             }
@@ -210,7 +219,29 @@
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('admin-app').style.display = 'flex';
                 fetchData();
+                startAutoRefresh();
             }
+        }
+        
+        function startAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            // Polling setiap 30 detik untuk mengecek data baru
+            autoRefreshInterval = setInterval(() => {
+                fetchData(true);
+            }, 30000); 
+        }
+
+        function playNotificationSound() {
+            try {
+                const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+                audio.play().catch(e => console.log('Autoplay dicegah oleh browser', e));
+            } catch(e) {}
+        }
+        
+        function resetNotifBadge() {
+            unreadNotifCount = 0;
+            document.getElementById('notif-badge').style.display = 'none';
+            document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
         }
         
         function formatRupiah(angka) {
@@ -228,9 +259,9 @@
             setTimeout(() => { container.innerHTML = ''; }, 5000);
         }
 
-        async function fetchData() {
+        async function fetchData(isSilent = false) {
             if (SCRIPT_URL === 'GANTI_DENGAN_URL_WEB_APP_ANDA') {
-                showAlert('Silakan set SCRIPT_URL terlebih dahulu', 'error');
+                if (!isSilent) showAlert('Silakan set SCRIPT_URL terlebih dahulu', 'error');
                 return;
             }
             
@@ -239,14 +270,31 @@
                 const result = await response.json();
                 
                 if (result.success) {
+                    const newTotal = result.data.length;
+                    
+                    // Cek jika ada data baru masuk
+                    if (!isFirstLoad && newTotal > lastTotalCount) {
+                        const newItemsCount = newTotal - lastTotalCount;
+                        showAlert(`🔔 Ada ${newItemsCount} pengajuan klaim baru!`, 'success');
+                        playNotificationSound();
+                        
+                        unreadNotifCount += newItemsCount;
+                        const badge = document.getElementById('notif-badge');
+                        badge.innerText = unreadNotifCount;
+                        badge.style.display = 'flex';
+                    }
+                    
+                    lastTotalCount = newTotal;
+                    isFirstLoad = false;
+
                     currentData = result.data;
                     applyFilters();
                     updateStats(currentData);
                 } else {
-                    showAlert('Gagal memuat data.', 'error');
+                    if (!isSilent) showAlert('Gagal memuat data.', 'error');
                 }
             } catch (error) {
-                showAlert('Terjadi kesalahan jaringan.', 'error');
+                if (!isSilent) showAlert('Terjadi kesalahan jaringan.', 'error');
             }
         }
 

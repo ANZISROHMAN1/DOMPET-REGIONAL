@@ -262,6 +262,21 @@ body::after {
     border-color: var(--primary-color);
 }
 
+.notification-icon {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notification-icon:hover {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
 /* Alerts */
 .flash-messages {
     margin-bottom: 1.5rem;

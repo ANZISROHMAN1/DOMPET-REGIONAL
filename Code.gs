@@ -60,6 +60,7 @@ function doPost(e) {
       var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
       
       sheet.appendRow([newId, now, requestData.nama, requestData.kegiatan, requestData.nominal, requestData.bank, requestData.rekening, 'Pending', fileUrl, '']);
+      
       return ContentService.createTextOutput(JSON.stringify({success: true, id: newId})).setMimeType(ContentService.MimeType.JSON);
         
     } else if (action === 'update_status') {
