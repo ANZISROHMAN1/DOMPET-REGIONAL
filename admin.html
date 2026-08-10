@@ -149,7 +149,7 @@
                             <table class="modern-table">
                                 <thead>
                                     <tr>
-                                        <th>Unit</th>
+                                        <th>Unit & Sub Unit</th>
                                         <th>Jumlah Pengajuan</th>
                                         <th>Total Nominal (Rp)</th>
                                     </tr>
@@ -389,7 +389,11 @@
                 // Ignore empty or invalid nominals
                 if (item.Status === 'Rejected') return; // optionally exclude rejected claims from financial report
                 
-                const unit = item.Unit || 'Lainnya';
+                let unit = item.Unit || 'Lainnya';
+                const subUnit = item.Sub_Unit || item['Sub Unit'];
+                if (subUnit && subUnit.trim() !== '') {
+                    unit += ' - ' + subUnit;
+                }
                 const nominal = Number(item.Nominal) || 0;
                 
                 if (!unitSummary[unit]) {
