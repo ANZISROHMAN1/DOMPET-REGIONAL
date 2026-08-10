@@ -169,6 +169,14 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                         <h2 style="font-size: 1.25rem; font-weight: 600;">Riwayat Pengajuan</h2>
                         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <select id="filter-unit" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Filter Unit">
+                                <option value="all">Semua Unit</option>
+                                <option value="OSP">OSP</option>
+                                <option value="ISP">ISP</option>
+                                <option value="FBB">FBB</option>
+                                <option value="BGES MBB">BGES MBB</option>
+                                <option value="DISTRICT">DISTRICT</option>
+                            </select>
                             <input type="date" id="filter-start" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Tanggal Mulai">
                             <span style="color: var(--text-muted);">sampai</span>
                             <input type="date" id="filter-end" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Tanggal Akhir">
@@ -343,6 +351,7 @@
         function resetFilters() {
             document.getElementById('filter-start').value = '';
             document.getElementById('filter-end').value = '';
+            if (document.getElementById('filter-unit')) document.getElementById('filter-unit').value = 'all';
             currentStatusFilter = 'all';
             fetchData();
         }
@@ -355,7 +364,13 @@
                 filtered = filtered.filter(d => d.Status === currentStatusFilter);
             }
             
-            // 2. Filter by Date Range
+            // 2. Filter by Unit
+            const unitFilter = document.getElementById('filter-unit') ? document.getElementById('filter-unit').value : 'all';
+            if (unitFilter !== 'all') {
+                filtered = filtered.filter(d => d.Unit === unitFilter);
+            }
+            
+            // 3. Filter by Date Range
             const startDate = document.getElementById('filter-start').value;
             const endDate = document.getElementById('filter-end').value;
             
@@ -448,7 +463,9 @@
             if (labels.length > 0) {
                 const bgColors = [
                     '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', 
-                    '#ef4444', '#14b8a6', '#f43f5e', '#84cc16', '#0ea5e9'
+                    '#ef4444', '#14b8a6', '#f43f5e', '#84cc16', '#0ea5e9',
+                    '#6366f1', '#f97316', '#d946ef', '#eab308', '#06b6d4',
+                    '#8b5cf6', '#10b981', '#f43f5e', '#3b82f6', '#f59e0b'
                 ];
                 
                 unitChart = new Chart(ctx, {
