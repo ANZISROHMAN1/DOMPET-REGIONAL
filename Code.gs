@@ -52,7 +52,6 @@ function doPost(e) {
         var base64Data = requestData.fileData.split(',')[1] || requestData.fileData;
         var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), requestData.mimeType, requestData.fileName);
         var file = folder.createFile(blob);
-        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         fileUrl = file.getUrl();
       }
       
@@ -69,7 +68,6 @@ function doPost(e) {
         var base64Data = requestData.fileData.split(',')[1] || requestData.fileData;
         var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), requestData.mimeType, "TF_" + requestData.fileName);
         var file = folder.createFile(blob);
-        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         tfUrl = file.getUrl();
       }
       
