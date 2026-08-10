@@ -155,6 +155,7 @@
                                     <th>ID</th>
                                     <th>Tanggal</th>
                                     <th>Nama</th>
+                                    <th>Unit & Sub Unit</th>
                                     <th>Kegiatan</th>
                                     <th>Nominal</th>
                                     <th>Bank & Rekening</th>
@@ -165,7 +166,7 @@
                             </thead>
                             <tbody id="table-body">
                                 <tr>
-                                    <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                    <td colspan="10" style="text-align: center; padding: 3rem; color: var(--text-muted);">
                                         <i class="ri-loader-4-line ri-spin" style="font-size: 2rem;"></i><br>Memuat data...
                                     </td>
                                 </tr>
@@ -182,7 +183,7 @@
 
     <script>
         // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz42_GQE6rwkANR7xj94bITMl5a8_isYobHE-uswU3wpwCGOHQw2tb-UP-wRwOwCi7LwQ/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUUqs8cKlZFH-rxfUchNd9VJh6PJcU89wr-ic6XH6HWtUaixIpHiDL5eCoseJzS2KVEA/exec';
         
         let currentData = [];
         let pendingUpdateRowId = null;
@@ -351,7 +352,7 @@
         function renderTable(data) {
             const tbody = document.getElementById('table-body');
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);"><i class="ri-inbox-line" style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem; color: #d1d5db;"></i>Belum ada data pengajuan</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 3rem; color: var(--text-muted);"><i class="ri-inbox-line" style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem; color: #d1d5db;"></i>Belum ada data pengajuan</td></tr>`;
                 return;
             }
             
@@ -379,6 +380,10 @@
                     <td>#${item.ID}</td>
                     <td>${dateStr}</td>
                     <td style="font-weight: 500;">${item.Nama}</td>
+                    <td>
+                        <div style="font-weight: 500;">${item.Unit || '-'}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">${item.Sub_Unit || item['Sub Unit'] || '-'}</div>
+                    </td>
                     <td>${item.Kegiatan}</td>
                     <td style="font-weight: 600;">${formatRupiah(item.Nominal)}</td>
                     <td>

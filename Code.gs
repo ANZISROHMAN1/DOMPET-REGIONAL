@@ -43,7 +43,7 @@ function doPost(e) {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
     
     // ID FOLDER SUDAH OTOMATIS SAYA MASUKKAN DI SINI! (TIDAK PERLU DIUBAH LAGI)
-    var FOLDER_ID = '1KZUfE8WprVIYasopAPFZ71SXHnC1MuAs'; 
+    var FOLDER_ID = '1GRHerfG8UMcQol4TY5HBvGS7NPXKYuL_'; 
     var folder = DriveApp.getFolderById(FOLDER_ID);
     
     if (action === 'submit') {
@@ -59,7 +59,7 @@ function doPost(e) {
       var newId = new Date().getTime().toString().slice(-6);
       var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
       
-      sheet.appendRow([newId, now, requestData.nama, requestData.kegiatan, requestData.nominal, requestData.bank, requestData.rekening, 'Pending', fileUrl, '']);
+      sheet.appendRow([newId, now, requestData.nama, requestData.kegiatan, requestData.nominal, requestData.bank, requestData.rekening, 'Pending', requestData.unit, requestData.sub_unit, fileUrl, '']);
       
       return ContentService.createTextOutput(JSON.stringify({success: true, id: newId})).setMimeType(ContentService.MimeType.JSON);
         
@@ -75,7 +75,7 @@ function doPost(e) {
       
       var rowIndex = parseInt(requestData.row_index);
       sheet.getRange(rowIndex, 8).setValue(requestData.status);
-      if (tfUrl) sheet.getRange(rowIndex, 10).setValue(tfUrl);
+      if (tfUrl) sheet.getRange(rowIndex, 12).setValue(tfUrl);
       return ContentService.createTextOutput(JSON.stringify({success: true})).setMimeType(ContentService.MimeType.JSON);
     }
   } catch (err) {

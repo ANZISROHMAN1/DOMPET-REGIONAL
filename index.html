@@ -72,6 +72,26 @@
                                 <input type="number" id="nominal" class="form-control" placeholder="Contoh: 150000" required min="1">
                             </div>
                         </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="unit">Unit</label>
+                                <select id="unit" class="form-control" required onchange="updateSubUnit()">
+                                    <option value="" disabled selected>Pilih Unit</option>
+                                    <option value="OSP">OSP</option>
+                                    <option value="ISP">ISP</option>
+                                    <option value="FBB">FBB</option>
+                                    <option value="BGES MBB">BGES MBB</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="sub_unit">Sub Unit</label>
+                                <select id="sub_unit" class="form-control" required>
+                                    <option value="" disabled selected>Pilih Sub Unit</option>
+                                </select>
+                            </div>
+                        </div>
                         
                         <div class="form-row">
                             <div class="form-group">
@@ -139,8 +159,32 @@
     
     <script>
         // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz42_GQE6rwkANR7xj94bITMl5a8_isYobHE-uswU3wpwCGOHQw2tb-UP-wRwOwCi7LwQ/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUUqs8cKlZFH-rxfUchNd9VJh6PJcU89wr-ic6XH6HWtUaixIpHiDL5eCoseJzS2KVEA/exec';
         
+        const subUnitData = {
+            "OSP": ["ACS MAINTENANCE", "CAM DWDM", "BACKBONE"],
+            "ISP": ["NE", "DEVA", "IP"],
+            "FBB": ["PSB", "ASC"],
+            "BGES MBB": ["PSB", "ASC"]
+        };
+
+        function updateSubUnit() {
+            const unitSelect = document.getElementById('unit');
+            const subUnitSelect = document.getElementById('sub_unit');
+            const selectedUnit = unitSelect.value;
+            
+            subUnitSelect.innerHTML = '<option value="" disabled selected>Pilih Sub Unit</option>';
+            
+            if (selectedUnit && subUnitData[selectedUnit]) {
+                subUnitData[selectedUnit].forEach(subUnit => {
+                    const option = document.createElement('option');
+                    option.value = subUnit;
+                    option.textContent = subUnit;
+                    subUnitSelect.appendChild(option);
+                });
+            }
+        }
+
         function updateFileName(input) {
             const textElement = document.getElementById('fileText');
             const wrapper = document.getElementById('uploadWrapper');
@@ -184,6 +228,8 @@
             const payload = {
                 action: 'submit',
                 nama: document.getElementById('nama').value,
+                unit: document.getElementById('unit').value,
+                sub_unit: document.getElementById('sub_unit').value,
                 nominal: document.getElementById('nominal').value,
                 bank: document.getElementById('bank').value,
                 rekening: document.getElementById('rekening').value,
