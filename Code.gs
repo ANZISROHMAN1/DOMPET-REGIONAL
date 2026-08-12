@@ -85,7 +85,7 @@ function doPost(e) {
         var sheetData = sheet.getDataRange().getValues();
         for (var i = 1; i < sheetData.length; i++) {
           if (sheetData[i][12] === fileHash && fileHash !== '') {
-            return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Gagal: Nota ini terdeteksi sama persis dengan nota yang sudah pernah diklaim sebelumnya!'})).setMimeType(ContentService.MimeType.JSON);
+            return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Nota sudah pernah diajukan'})).setMimeType(ContentService.MimeType.JSON);
           }
         }
         

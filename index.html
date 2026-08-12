@@ -264,7 +264,11 @@
                         btn.disabled = false;
                     }
                 } catch (error) {
-                    showAlert('Kesalahan sistem: ' + error.message, 'error');
+                    if (error.message.includes('Failed to fetch') || error.message.includes('jaringan')) {
+                        showAlert('Gagal: Nota sudah pernah diajukan (atau koneksi terputus).', 'error');
+                    } else {
+                        showAlert('Kesalahan sistem: ' + error.message, 'error');
+                    }
                     btn.innerHTML = '<i class="ri-send-plane-fill"></i> Kirim Pengajuan';
                     btn.disabled = false;
                 }
