@@ -587,33 +587,47 @@
             const bgColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
             
             jagoChart = new Chart(ctx, {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
+                        label: 'Total Pengeluaran (Rp)',
                         data: values,
                         backgroundColor: bgColors,
-                        borderWidth: 0,
-                        hoverOffset: 4
+                        borderRadius: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '65%',
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#374151' : '#f9fafb',
-                                padding: 20,
-                                font: { family: "'Inter', sans-serif", size: 12 }
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'
+                            },
+                            ticks: {
+                                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#6b7280' : '#9ca3af',
+                                callback: function(value) {
+                                    if (value >= 1000000) return 'Rp ' + (value/1000000) + 'M';
+                                    if (value >= 1000) return 'Rp ' + (value/1000) + 'k';
+                                    return 'Rp ' + value;
+                                }
                             }
                         },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#6b7280' : '#9ca3af'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return 'Rp ' + context.parsed.toLocaleString('id-ID');
+                                    return 'Rp ' + context.parsed.y.toLocaleString('id-ID');
                                 }
                             }
                         }
