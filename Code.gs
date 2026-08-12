@@ -107,7 +107,7 @@ function doPost(e) {
         var nominalStr = requestData.nominal ? requestData.nominal.toString().replace(/[^0-9]/g, '') : "0";
         var amount = -Math.abs(parseFloat(nominalStr)); // Pengeluaran (minus)
         
-        var jagoDataToInsert = [now, sourceDest, transDetails, requestData.kegiatan, amount];
+        var jagoDataToInsert = [now, sourceDest, transDetails, requestData.kegiatan, amount, "", requestData.unit];
         
         // Mencari baris kosong pertama di kolom A (Menghindari bug appendRow jika ada ArrayFormula)
         var jagoColA = sheetJago.getRange("A:A").getValues();
@@ -119,7 +119,7 @@ function doPost(e) {
           }
         }
         
-        sheetJago.getRange(jagoTargetRow, 1, 1, 5).setValues([jagoDataToInsert]);
+        sheetJago.getRange(jagoTargetRow, 1, 1, 7).setValues([jagoDataToInsert]);
         formatTransactions(sheetJago);
       }
       
