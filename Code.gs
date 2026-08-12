@@ -30,18 +30,26 @@ function doGet(e) {
   } else if (action === 'list') {
     rows.reverse();
     return ContentService.createTextOutput(JSON.stringify({success: true, data: rows})).setMimeType(ContentService.MimeType.JSON);
-  } else if (action === 'asgar_data') {
-    var asgarSheet = ss.getSheetByName('ASGAR HSL');
-    if (!asgarSheet) return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Sheet ASGAR HSL tidak ditemukan'})).setMimeType(ContentService.MimeType.JSON);
+  } else if (action === 'jago_data') {
+    var jagoSheet = ss.getSheetByName('REKAPAN JAGO');
+    if (!jagoSheet) return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Sheet REKAPAN JAGO tidak ditemukan'})).setMimeType(ContentService.MimeType.JSON);
     
-    var asgarData = asgarSheet.getDataRange().getValues();
-    var resultData = [];
-    for (var k = 2; k < asgarData.length; k++) {
-      var territory = asgarData[k][0];
-      var avg = asgarData[k][13];
-      if (territory && territory !== '') {
-        resultData.push({ territory: territory, avg: avg });
+    var jagoData = jagoSheet.getDataRange().getValues();
+    var summaryData = {};
+    for (var k = 1; k < jagoData.length; k++) {
+      var amount = parseFloat(jagoData[k][4]) || 0;
+      var unit = jagoData[k][6] || 'Tanpa Unit';
+      
+      if (amount < 0) { // Only count expenses
+        var absAmount = Math.abs(amount);
+        if (!summaryData[unit]) summaryData[unit] = 0;
+        summaryData[unit] += absAmount;
       }
+    }
+    
+    var resultData = [];
+    for (var u in summaryData) {
+      resultData.push({ unit: u, total: summaryData[u] });
     }
     return ContentService.createTextOutput(JSON.stringify({success: true, data: resultData})).setMimeType(ContentService.MimeType.JSON);
   }

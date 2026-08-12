@@ -222,14 +222,14 @@
                         </div>
                     </div>
                     
-                    <!-- ASGAR HSL Report Section -->
+                    <!-- Rekapan Jago Report Section -->
                     <div class="glass-card" style="margin-bottom: 2rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                            <h2 style="font-size: 1.25rem; font-weight: 600;">Report Performance Indibiz (ASGAR HSL)</h2>
-                            <button onclick="fetchAsgarData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
+                            <h2 style="font-size: 1.25rem; font-weight: 600;">Total Pengeluaran per Unit (Data Rekapan Jago)</h2>
+                            <button onclick="fetchJagoData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
                         </div>
                         <div style="position: relative; height: 350px;">
-                            <canvas id="asgarChart"></canvas>
+                            <canvas id="jagoChart"></canvas>
                         </div>
                     </div>
                 </div> <!-- End of report-view -->
@@ -263,8 +263,8 @@
                 document.getElementById('page-desc').innerText = 'Ringkasan laporan pengajuan per unit';
                 // Trigger chart resize when unhidden
                 if (unitChart) unitChart.resize();
-                if (!asgarChart) fetchAsgarData();
-                else asgarChart.resize();
+                if (!jagoChart) fetchJagoData();
+                else jagoChart.resize();
             }
         }
         
@@ -277,7 +277,7 @@
         let isFirstLoad = true;
         let unreadNotifCount = 0;
         let unitChart = null;
-        let asgarChart = null;
+        let jagoChart = null;
 
         // Simple auth
         const ADMIN_PWD = 'admin123';
@@ -555,78 +555,65 @@
             }
         } 
         
-        async function fetchAsgarData() {
+        async function fetchJagoData() {
             try {
-                const response = await fetch(SCRIPT_URL + '?action=asgar_data');
+                const response = await fetch(SCRIPT_URL + '?action=jago_data');
                 const result = await response.json();
                 
                 if (result.success && result.data) {
-                    renderAsgarChart(result.data);
+                    renderJagoChart(result.data);
                 } else {
-                    console.error('Failed to fetch ASGAR data:', result.message);
+                    console.error('Failed to fetch Jago data:', result.message);
                 }
             } catch (error) {
-                console.error('Network error fetching ASGAR data:', error);
+                console.error('Network error fetching Jago data:', error);
             }
         }
         
-        function renderAsgarChart(data) {
-            const ctx = document.getElementById('asgarChart');
+        function renderJagoChart(data) {
+            const ctx = document.getElementById('jagoChart');
             if (!ctx) return;
             
-            if (asgarChart) {
-                asgarChart.destroy();
+            if (jagoChart) {
+                jagoChart.destroy();
             }
             
-            // Sort by AVG descending
-            data.sort((a, b) => b.avg - a.avg);
+            // Sort by total descending
+            data.sort((a, b) => b.total - a.total);
             
-            const labels = data.map(d => d.territory);
-            const values = data.map(d => parseFloat(d.avg) || 0);
+            const labels = data.map(d => d.unit);
+            const values = data.map(d => d.total);
             
-            // Generate distinct colors based on value
-            const bgColors = values.map(v => v >= 100 ? '#10b981' : (v >= 90 ? '#3b82f6' : (v >= 80 ? '#f59e0b' : '#ef4444')));
+            const bgColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
             
-            asgarChart = new Chart(ctx, {
-                type: 'bar', // Bar chart lebih rapih dari pie chart untuk 50+ Teritory
+            jagoChart = new Chart(ctx, {
+                type: 'doughnut',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'AVG (%)',
                         data: values,
                         backgroundColor: bgColors,
-                        borderRadius: 4
+                        borderWidth: 0,
+                        hoverOffset: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 105,
-                            grid: {
-                                color: document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'
-                            },
-                            ticks: {
-                                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#6b7280' : '#9ca3af'
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#374151' : '#f9fafb',
+                                padding: 20,
+                                font: { family: "'Inter', sans-serif", size: 12 }
                             }
                         },
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#6b7280' : '#9ca3af',
-                                maxRotation: 90,
-                                minRotation: 45
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return 'AVG: ' + context.parsed.y + '%';
+                                    return 'Rp ' + context.parsed.toLocaleString('id-ID');
                                 }
                             }
                         }
