@@ -264,7 +264,7 @@
                         btn.disabled = false;
                     }
                 } catch (error) {
-                    showAlert('Terjadi kesalahan jaringan.', 'error');
+                    showAlert('Kesalahan sistem: ' + error.message, 'error');
                     btn.innerHTML = '<i class="ri-send-plane-fill"></i> Kirim Pengajuan';
                     btn.disabled = false;
                 }
