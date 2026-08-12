@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Klaim.id - Dashboard Admin</title>
+    <title>Klaim.id - Report Keuangan</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="static/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
@@ -66,13 +66,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="admin.html" class="active">
+                    <a href="admin.html">
                         <i class="ri-dashboard-line"></i>
                         <span>Dashboard Admin</span>
                     </a>
                 </li>
                 <li>
-                    <a href="report.html">
+                    <a href="report.html" class="active">
                         <i class="ri-pie-chart-2-line"></i>
                         <span>Report Keuangan</span>
                     </a>
@@ -84,8 +84,8 @@
         <main class="main-content">
             <header class="topbar">
                 <div class="greeting">
-                    <h1>Dashboard Admin</h1>
-                    <p>Monitoring dan pengelolaan pengajuan reimbursement</p>
+                    <h1>Report Keuangan</h1>
+                    <p>Ringkasan laporan pengajuan per unit</p>
                 </div>
                 <div class="profile-section">
                     <div class="notification-icon" style="position: relative;" onclick="resetNotifBadge()" title="Notifikasi Baru">
@@ -107,94 +107,42 @@
             <div class="content-wrapper">
                 <div id="alert-container"></div>
                 
-                <!-- Stats Row -->
-                <div class="dashboard-stats">
-                    <div class="stat-card" style="cursor: pointer; transition: transform 0.2s;" onclick="filterTable('all')" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                        <div class="stat-icon blue">
-                            <i class="ri-file-list-3-line"></i>
-                        </div>
-                        <div class="stat-details">
-                            <h3 id="stat-total">0</h3>
-                            <p>Total Pengajuan</p>
-                        </div>
+
+
+                <!-- Financial Report Section -->
+                <div class="glass-card" style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="font-size: 1.25rem; font-weight: 600;">Laporan Keuangan per Unit</h2>
                     </div>
-                    
-                    <div class="stat-card" style="cursor: pointer; transition: transform 0.2s;" onclick="filterTable('Pending')" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                        <div class="stat-icon orange">
-                            <i class="ri-time-line"></i>
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: center;">
+                        <div style="position: relative; height: 250px;">
+                            <canvas id="unitPieChart"></canvas>
                         </div>
-                        <div class="stat-details">
-                            <h3 id="stat-pending">0</h3>
-                            <p>Menunggu Konfirmasi</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card" style="cursor: pointer; transition: transform 0.2s;" onclick="filterTable('Approved')" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                        <div class="stat-icon green">
-                            <i class="ri-check-double-line"></i>
-                        </div>
-                        <div class="stat-details">
-                            <h3 id="stat-approved">0</h3>
-                            <p>Telah Dibayar</p>
+                        <div class="table-container">
+                            <table class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>Unit & Sub Unit</th>
+                                        <th>Jumlah Pengajuan</th>
+                                        <th>Total Nominal (Rp)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="report-summary-body">
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">Memuat data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
-                <hr class="section-divider">
 
-                <!-- History Table -->
-                <div class="glass-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                        <h2 style="font-size: 1.25rem; font-weight: 600;">Riwayat Pengajuan</h2>
-                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                            <select id="filter-unit" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Filter Unit">
-                                <option value="all">Semua Unit</option>
-                                <option value="OSP">OSP</option>
-                                <option value="ISP">ISP</option>
-                                <option value="FBB">FBB</option>
-                                <option value="BGES MBB">BGES MBB</option>
-                                <option value="DISTRICT">DISTRICT</option>
-                            </select>
-                            <input type="date" id="filter-start" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Tanggal Mulai">
-                            <span style="color: var(--text-muted);">sampai</span>
-                            <input type="date" id="filter-end" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Tanggal Akhir">
-                            <button onclick="applyFilters()" class="btn btn-sm btn-primary"><i class="ri-filter-3-line"></i> Filter</button>
-                            <button onclick="resetFilters()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
-                        </div>
-                    </div>
-                    
-                    <div class="table-container">
-                        <table class="modern-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Tanggal</th>
-                                    <th>Nama</th>
-                                    <th>Unit & Sub Unit</th>
-                                    <th>Kegiatan</th>
-                                    <th>Nominal</th>
-                                    <th>Bank & Rekening</th>
-                                    <th>Bukti</th>
-                                    <th>Status</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-body">
-                                <tr>
-                                    <td colspan="10" style="text-align: center; padding: 3rem; color: var(--text-muted);">
-                                        <i class="ri-loader-4-line ri-spin" style="font-size: 2rem;"></i><br>Memuat data...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
         </main>
     </div>
 
-    <!-- Hidden form for TF upload -->
-    <input type="file" id="tf-upload-input" accept="image/*,.pdf" style="display: none;">
+
 
     <script>
         // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
@@ -306,7 +254,6 @@
 
                     currentData = result.data;
                     applyFilters();
-                    updateStats(currentData);
                 } else {
                     if (!isSilent) showAlert('Gagal memuat data.', 'error');
                 }
@@ -369,10 +316,121 @@
                 });
             }
             
-            renderTable(filtered);
+            updateFinancialReport(filtered);
         }
 
-
+        function updateFinancialReport(data) {
+            // Group data by Unit
+            const unitSummary = {};
+            let totalAmount = 0;
+            
+            data.forEach(item => {
+                // Ignore empty or invalid nominals
+                if (item.Status === 'Rejected') return; // optionally exclude rejected claims from financial report
+                
+                let unit = item.Unit || 'Lainnya';
+                const subUnit = item.Sub_Unit || item['Sub Unit'];
+                if (subUnit && subUnit.trim() !== '') {
+                    unit += ' - ' + subUnit;
+                }
+                const nominal = Number(item.Nominal) || 0;
+                
+                if (!unitSummary[unit]) {
+                    unitSummary[unit] = { count: 0, total: 0 };
+                }
+                
+                unitSummary[unit].count += 1;
+                unitSummary[unit].total += nominal;
+                totalAmount += nominal;
+            });
+            
+            // Prepare data for Chart and Table
+            const labels = Object.keys(unitSummary);
+            const amounts = labels.map(label => unitSummary[label].total);
+            const counts = labels.map(label => unitSummary[label].count);
+            
+            // Update Table
+            const tbody = document.getElementById('report-summary-body');
+            if (labels.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tidak ada data</td></tr>`;
+            } else {
+                let html = '';
+                labels.forEach(label => {
+                    html += `
+                        <tr>
+                            <td style="font-weight: 500;">${label}</td>
+                            <td>${unitSummary[label].count} Pengajuan</td>
+                            <td style="font-weight: 600; color: var(--success-color);">${formatRupiah(unitSummary[label].total)}</td>
+                        </tr>
+                    `;
+                });
+                // Add Total row
+                const totalCount = counts.reduce((a, b) => a + b, 0);
+                html += `
+                    <tr style="background: var(--bg-main);">
+                        <td style="font-weight: 700;">TOTAL KESELURUHAN</td>
+                        <td style="font-weight: 700;">${totalCount} Pengajuan</td>
+                        <td style="font-weight: 700; color: var(--success-color); font-size: 1.1rem;">${formatRupiah(totalAmount)}</td>
+                    </tr>
+                `;
+                tbody.innerHTML = html;
+            }
+            
+            // Update Chart
+            const ctx = document.getElementById('unitPieChart');
+            if (!ctx) return;
+            
+            if (unitChart) {
+                unitChart.destroy();
+            }
+            
+            if (labels.length > 0) {
+                const bgColors = [
+                    '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', 
+                    '#ef4444', '#14b8a6', '#f43f5e', '#84cc16', '#0ea5e9',
+                    '#6366f1', '#f97316', '#d946ef', '#eab308', '#06b6d4',
+                    '#8b5cf6', '#10b981', '#f43f5e', '#3b82f6', '#f59e0b'
+                ];
+                
+                unitChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: amounts,
+                            backgroundColor: bgColors.slice(0, labels.length),
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { 
+                                    color: document.documentElement.getAttribute('data-theme') === 'light' ? '#1f2937' : '#f9fafb',
+                                    padding: 20
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) label += ': ';
+                                        if (context.parsed !== null) {
+                                            label += formatRupiah(context.parsed);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
 
         function renderTable(data) {
             const tbody = document.getElementById('table-body');
@@ -498,6 +556,8 @@
             html.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             document.getElementById('theme-icon').className = newTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line';
+            
+            if (unitChart) applyFilters(); // refresh chart text colors
         }
         
         window.addEventListener('DOMContentLoaded', () => {

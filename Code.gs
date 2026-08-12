@@ -6,7 +6,8 @@ function paksaIzin() {
 }
 
 function doGet(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('FORM USER') || ss.getActiveSheet();
   var data = sheet.getDataRange().getValues();
   var action = e.parameter.action;
   
@@ -40,7 +41,9 @@ function doPost(e) {
   try {
     var requestData = JSON.parse(e.postData.contents);
     var action = requestData.action;
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('FORM USER') || ss.getActiveSheet();
+    var sheetJago = ss.getSheetByName('REKAPAN JAGO');
     
     // ID FOLDER SUDAH OTOMATIS SAYA MASUKKAN DI SINI! (TIDAK PERLU DIUBAH LAGI)
     var FOLDER_ID = '1GRHerfG8UMcQol4TY5HBvGS7NPXKYuL_'; 
@@ -58,7 +61,30 @@ function doPost(e) {
       var newId = new Date().getTime().toString().slice(-6);
       var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
       
-      sheet.appendRow([newId, now, requestData.nama, requestData.kegiatan, requestData.nominal, requestData.bank, requestData.rekening, 'Pending', requestData.unit, requestData.sub_unit, fileUrl, '']);
+      var rowData = [newId, now, requestData.nama, requestData.kegiatan, requestData.nominal, requestData.bank, requestData.rekening, 'Pending', requestData.unit, requestData.sub_unit, fileUrl, ''];
+      sheet.appendRow(rowData);
+      
+      // Menambahkan data ke sheet REKAPAN JAGO dengan format khusus
+      if (sheetJago) {
+        var sourceDest = requestData.nama + "\n" + requestData.bank + " " + requestData.rekening;
+        var transDetails = "Claim ID# " + newId;
+        var nominalStr = requestData.nominal ? requestData.nominal.toString().replace(/[^0-9]/g, '') : "0";
+        var amount = -Math.abs(parseFloat(nominalStr)); // Pengeluaran (minus)
+        
+        var jagoDataToInsert = [now, sourceDest, transDetails, requestData.kegiatan, amount];
+        
+        // Mencari baris kosong pertama di kolom A (Menghindari bug appendRow jika ada ArrayFormula)
+        var jagoColA = sheetJago.getRange("A:A").getValues();
+        var jagoTargetRow = jagoColA.length + 1;
+        for (var i = 0; i < jagoColA.length; i++) {
+          if (jagoColA[i][0] === "" && i > 0) { // i > 0 untuk melewati header
+            jagoTargetRow = i + 1;
+            break;
+          }
+        }
+        
+        sheetJago.getRange(jagoTargetRow, 1, 1, 5).setValues([jagoDataToInsert]);
+      }
       
       return ContentService.createTextOutput(JSON.stringify({success: true, id: newId})).setMimeType(ContentService.MimeType.JSON);
         
