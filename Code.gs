@@ -30,6 +30,20 @@ function doGet(e) {
   } else if (action === 'list') {
     rows.reverse();
     return ContentService.createTextOutput(JSON.stringify({success: true, data: rows})).setMimeType(ContentService.MimeType.JSON);
+  } else if (action === 'asgar_data') {
+    var asgarSheet = ss.getSheetByName('ASGAR HSL');
+    if (!asgarSheet) return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Sheet ASGAR HSL tidak ditemukan'})).setMimeType(ContentService.MimeType.JSON);
+    
+    var asgarData = asgarSheet.getDataRange().getValues();
+    var resultData = [];
+    for (var k = 2; k < asgarData.length; k++) {
+      var territory = asgarData[k][0];
+      var avg = asgarData[k][13];
+      if (territory && territory !== '') {
+        resultData.push({ territory: territory, avg: avg });
+      }
+    }
+    return ContentService.createTextOutput(JSON.stringify({success: true, data: resultData})).setMimeType(ContentService.MimeType.JSON);
   }
   return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Action not found'})).setMimeType(ContentService.MimeType.JSON);
 }
@@ -98,6 +112,7 @@ function doPost(e) {
         }
         
         sheetJago.getRange(jagoTargetRow, 1, 1, 5).setValues([jagoDataToInsert]);
+        formatTransactions(sheetJago);
       }
       
       return ContentService.createTextOutput(JSON.stringify({success: true, id: newId})).setMimeType(ContentService.MimeType.JSON);
@@ -119,4 +134,22 @@ function doPost(e) {
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({success: false, message: err.message})).setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+function formatTransactions(sheet) {
+  if (!sheet) return;
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+  var range = sheet.getRange(2, 5, lastRow - 1, 1);
+  var rules = sheet.getConditionalFormatRules();
+  var newRules = rules.filter(function(rule) {
+    var ranges = rule.getRanges();
+    return !ranges.some(function(r) { return r.getColumn() === 5; });
+  });
+  var incomeRule = SpreadsheetApp.newConditionalFormatRule().whenNumberGreaterThan(0).setBackground("#d9ead3").setFontColor("#137333").setRanges([range]).build();
+  var expenseRule = SpreadsheetApp.newConditionalFormatRule().whenNumberLessThan(0).setBackground("#f4cccc").setFontColor("#990000").setRanges([range]).build();
+  newRules.push(incomeRule);
+  newRules.push(expenseRule);
+  sheet.setConditionalFormatRules(newRules);
+  range.setNumberFormat('"Rp" #,##0');
 }

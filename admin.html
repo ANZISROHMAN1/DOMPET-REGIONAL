@@ -221,6 +221,17 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- ASGAR HSL Report Section -->
+                    <div class="glass-card" style="margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h2 style="font-size: 1.25rem; font-weight: 600;">Report Performance Indibiz (ASGAR HSL)</h2>
+                            <button onclick="fetchAsgarData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
+                        </div>
+                        <div style="position: relative; height: 350px;">
+                            <canvas id="asgarChart"></canvas>
+                        </div>
+                    </div>
                 </div> <!-- End of report-view -->
 
             </div>
@@ -252,6 +263,8 @@
                 document.getElementById('page-desc').innerText = 'Ringkasan laporan pengajuan per unit';
                 // Trigger chart resize when unhidden
                 if (unitChart) unitChart.resize();
+                if (!asgarChart) fetchAsgarData();
+                else asgarChart.resize();
             }
         }
         
@@ -264,6 +277,7 @@
         let isFirstLoad = true;
         let unreadNotifCount = 0;
         let unitChart = null;
+        let asgarChart = null;
 
         // Simple auth
         const ADMIN_PWD = 'admin123';
@@ -540,6 +554,86 @@
                 });
             }
         } 
+        
+        async function fetchAsgarData() {
+            try {
+                const response = await fetch(SCRIPT_URL + '?action=asgar_data');
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    renderAsgarChart(result.data);
+                } else {
+                    console.error('Failed to fetch ASGAR data:', result.message);
+                }
+            } catch (error) {
+                console.error('Network error fetching ASGAR data:', error);
+            }
+        }
+        
+        function renderAsgarChart(data) {
+            const ctx = document.getElementById('asgarChart');
+            if (!ctx) return;
+            
+            if (asgarChart) {
+                asgarChart.destroy();
+            }
+            
+            // Sort by AVG descending
+            data.sort((a, b) => b.avg - a.avg);
+            
+            const labels = data.map(d => d.territory);
+            const values = data.map(d => parseFloat(d.avg) || 0);
+            
+            // Generate distinct colors based on value
+            const bgColors = values.map(v => v >= 100 ? '#10b981' : (v >= 90 ? '#3b82f6' : (v >= 80 ? '#f59e0b' : '#ef4444')));
+            
+            asgarChart = new Chart(ctx, {
+                type: 'bar', // Bar chart lebih rapih dari pie chart untuk 50+ Teritory
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'AVG (%)',
+                        data: values,
+                        backgroundColor: bgColors,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 105,
+                            grid: {
+                                color: document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'
+                            },
+                            ticks: {
+                                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#6b7280' : '#9ca3af'
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#6b7280' : '#9ca3af',
+                                maxRotation: 90,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'AVG: ' + context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         function renderTable(data) {
             const tbody = document.getElementById('table-body');
