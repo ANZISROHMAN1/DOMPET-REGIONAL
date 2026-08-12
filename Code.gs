@@ -51,9 +51,23 @@ function doPost(e) {
     
     if (action === 'submit') {
       var fileUrl = '';
+      var fileHash = '';
       if (requestData.fileData && requestData.fileName && requestData.mimeType) {
         var base64Data = requestData.fileData.split(',')[1] || requestData.fileData;
-        var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), requestData.mimeType, requestData.fileName);
+        var byteData = Utilities.base64Decode(base64Data);
+        
+        // Cek duplikasi nota menggunakan MD5 hash
+        var digest = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, byteData);
+        fileHash = digest.map(function(byte) { return ('0' + (byte & 0xFF).toString(16)).slice(-2); }).join('');
+        
+        var sheetData = sheet.getDataRange().getValues();
+        for (var i = 1; i < sheetData.length; i++) {
+          if (sheetData[i][12] === fileHash && fileHash !== '') {
+            return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Gagal: Nota ini terdeteksi sama persis dengan nota yang sudah pernah diklaim sebelumnya!'})).setMimeType(ContentService.MimeType.JSON);
+          }
+        }
+        
+        var blob = Utilities.newBlob(byteData, requestData.mimeType, requestData.fileName);
         var file = folder.createFile(blob);
         fileUrl = file.getUrl();
       }
@@ -61,7 +75,7 @@ function doPost(e) {
       var newId = new Date().getTime().toString().slice(-6);
       var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
       
-      var rowData = [newId, now, requestData.nama, requestData.kegiatan, requestData.nominal, requestData.bank, requestData.rekening, 'Pending', requestData.unit, requestData.sub_unit, fileUrl, ''];
+      var rowData = [newId, now, requestData.nama, requestData.kegiatan, requestData.nominal, requestData.bank, requestData.rekening, 'Pending', requestData.unit, requestData.sub_unit, fileUrl, '', fileHash];
       sheet.appendRow(rowData);
       
       // Menambahkan data ke sheet REKAPAN JAGO dengan format khusus
