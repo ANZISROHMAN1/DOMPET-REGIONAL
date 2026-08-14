@@ -364,7 +364,14 @@
         }
         
         function formatRupiah(angka) {
-            return "Rp " + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            const num = parseFloat(angka);
+            if (isNaN(num)) return "Rp 0";
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(num);
         }
 
         function showAlert(message, type) {

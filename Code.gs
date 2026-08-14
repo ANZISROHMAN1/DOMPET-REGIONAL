@@ -330,21 +330,52 @@ function processParsedJagoData(transactions) {
   var sheet = ss.getSheetByName('REKAPAN JAGO');
   if (!sheet) throw new Error("Sheet bernama 'REKAPAN JAGO' tidak ditemukan!");
   
-  var existingData = sheet.getDataRange().getValues();
-  var existingIds = {};
-  for (var i = 1; i < existingData.length; i++) {
-    var details = existingData[i][2] ? existingData[i][2].toString() : "";
-    var match = details.match(/ID#\\s*([A-Za-z0-9-]+)/);
-    if (match) existingIds[match[1]] = true;
+  // HAPUS SEMUA DATA LAMA (Karena kita akan timpa / overwrite sepenuhnya dari PDF)
+  var lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).clearContent();
   }
   
+  // Fungsi Cerdas untuk menebak Unit
+  function guessUnit(details, notes) {
+    var text = (details + " " + notes).toLowerCase();
+    if (text.includes("district")) return "District";
+    if (text.includes("osp")) return "OSP";
+    if (text.includes("isp")) return "ISP";
+    if (text.includes("hai")) return "HAI";
+    if (text.includes("bges") || text.includes("mbb")) return "BGES & MBB";
+    if (text.includes("fbb")) return "FBB";
+    return ""; // KOSONGKAN jika tidak dikenali agar tidak error validasi data
+  }
+  
+  // --- BATAS TANGGAL IMPORT ---
+  // 30 Juli 2026 (Bulan di JavaScript dimulai dari 0, jadi 6 = Juli)
+  var CUTOFF_DATE = new Date(2026, 6, 30); 
+  
+  var newRows = [];
   var addedCount = 0;
   
   for (var i = 0; i < transactions.length; i++) {
     var trx = transactions[i];
+    if (!trx || trx.length < 5) continue;
     
-    // Combine Notes, Amount, and Balance columns to safely extract the last two numbers
-    // This handles cases where pdf.js column boundaries shift slightly
+    var dateStr = trx[0];
+    
+    // Filter Tanggal (Ekstrak dari teks kotor)
+    var dateMatch = dateStr.match(/(\d{1,2}\s+[a-zA-Z]{3}\s+\d{4})/);
+    if (!dateMatch) continue; // Bukan baris transaksi (misal: header/footer)
+    
+    var englishDateStr = dateMatch[1].replace('Mei', 'May').replace('Agu', 'Aug').replace('Okt', 'Oct').replace('Des', 'Dec');
+    var transDate = new Date(englishDateStr);
+    if (!isNaN(transDate.getTime()) && transDate < CUTOFF_DATE) {
+      continue; // Lewati transaksi sebelum 30 Juli 2026
+    }
+    
+    // Pastikan baris ini adalah transaksi asli (harus punya ID#)
+    if (!trx[1].includes("ID#") && !trx[2].includes("ID#")) {
+      continue; // Abaikan header tabel
+    }
+    
     var notesAndMoney = (trx[3] + " " + trx[4] + " " + trx[5]).trim();
     var tokens = notesAndMoney.split(/\s+/);
     
@@ -356,25 +387,28 @@ function processParsedJagoData(transactions) {
     
     if (amountStr.toLowerCase().includes('amount')) continue;
     
-    var transIdMatch = trx[2].match(/ID#\s*([A-Za-z0-9-]+)/);
-    var transId = transIdMatch ? transIdMatch[1] : null;
-    
-    if (transId && existingIds[transId]) continue; 
-    
     // Clean numbers
     var amount = parseFloat(amountStr.replace(/\./g, '').replace(/,/g, '.'));
     var balance = parseFloat(balanceStr.replace(/\./g, '').replace(/,/g, '.'));
     
-    sheet.appendRow([
+    // Tebak Unit secara otomatis!
+    var autoUnit = guessUnit(trx[1] + " " + trx[2], notes);
+    
+    newRows.push([
       trx[0], // Date & Time
       trx[1], // Source/Dest
       trx[2], // Details
       notes,  // Corrected Notes
       amount,
       balance, // Actual Balance
-      "" // Unit
+      autoUnit // Unit Cerdas Otomatis
     ]);
     addedCount++;
+  }
+  
+  // Tulis sekaligus semua data ke Sheet (Jauh lebih cepat dari appendRow)
+  if (newRows.length > 0) {
+    sheet.getRange(2, 1, newRows.length, newRows[0].length).setValues(newRows);
   }
   
   formatTransactions(sheet);
@@ -405,7 +439,7 @@ function updateNeracaKeuangan() {
   var firstRow = data[1];
   var firstAmount = parseFloat(firstRow[4]) || 0;
   var firstBalance = parseFloat(firstRow[5]) || 0;
-  var saldoAwal = firstBalance - firstAmount;
+  var saldoAwal = Math.round((firstBalance - firstAmount) * 100) / 100;
   
   var lastRow = data[data.length - 1];
   var saldoAkhir = parseFloat(lastRow[5]) || 0;
