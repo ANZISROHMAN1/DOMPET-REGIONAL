@@ -880,6 +880,72 @@
             }
         }
 
+        async function fetchNeracaData() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=neraca_data`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    renderNeracaTable(result.data);
+                } else {
+                    console.error('Failed to fetch Neraca data:', result.message);
+                    document.getElementById('neraca-body').innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--danger-color);">Gagal memuat data neraca: ${result.message}</td></tr>`;
+                }
+            } catch (error) {
+                console.error('Error fetching neraca:', error);
+                document.getElementById('neraca-body').innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--danger-color);">Error koneksi saat memuat neraca.</td></tr>`;
+            }
+        }
+        
+        function renderNeracaTable(data) {
+            const tbody = document.getElementById('neraca-body');
+            
+            let startIndex = 0;
+            if (data.length > 0 && data[0][0] === "Nama Akun") {
+                startIndex = 1;
+            }
+            
+            if (data.length <= startIndex) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">Data neraca kosong.</td></tr>`;
+                return;
+            }
+            
+            let html = '';
+            for (let i = startIndex; i < data.length; i++) {
+                const row = data[i];
+                const namaAkun = row[0] || '';
+                const debit = row[1] ? formatRupiah(row[1]) : '-';
+                const kredit = row[2] ? formatRupiah(row[2]) : '-';
+                
+                let rowStyle = '';
+                let nameStyle = '';
+                let valStyle = '';
+                
+                if (namaAkun === "Saldo Awal" || namaAkun === "Saldo Akhir") {
+                    rowStyle = 'background: var(--bg-main);';
+                    nameStyle = 'font-weight: 700;';
+                    valStyle = 'font-weight: 700; color: var(--success-color);';
+                } else if (namaAkun === "Total Nominal") {
+                    rowStyle = 'background: var(--bg-input); border-top: 2px solid var(--border-color);';
+                    nameStyle = 'font-weight: 700;';
+                    valStyle = 'font-weight: 700;';
+                } else if (namaAkun === "") {
+                    html += `<tr><td colspan="3" style="height: 15px;"></td></tr>`;
+                    continue;
+                }
+                
+                html += `
+                    <tr style="${rowStyle}">
+                        <td style="${nameStyle}">${namaAkun}</td>
+                        <td style="${valStyle}">${debit}</td>
+                        <td style="${valStyle}">${kredit}</td>
+                    </tr>
+                `;
+            }
+            
+            tbody.innerHTML = html;
+        }
+
         // Theme logic
         function toggleTheme() {
             const html = document.documentElement;
