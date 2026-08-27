@@ -85,8 +85,12 @@
                                 <p style="font-weight: 500;" id="res-tanggal"></p>
                             </div>
                             <div>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Unit & Sub Unit</p>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Unit</p>
                                 <p style="font-weight: 500;" id="res-unit"></p>
+                            </div>
+                            <div>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Sub Unit</p>
+                                <p style="font-weight: 500;" id="res-sub-unit"></p>
                             </div>
                             <div>
                                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Kegiatan</p>
@@ -163,7 +167,8 @@
                     document.getElementById('result-container').style.display = 'block';
                     document.getElementById('res-id').innerText = '#' + data['ID'];
                     document.getElementById('res-nama').innerText = data['Nama'];
-                    document.getElementById('res-unit').innerText = (data['Unit'] || '-') + ' / ' + (data['Sub_Unit'] || data['Sub Unit'] || '-');
+                    document.getElementById('res-unit').innerText = data['Unit'] || '-';
+                    document.getElementById('res-sub-unit').innerText = data['Sub_Unit'] || data['Sub Unit'] || '-';
                     
                     // Format Date
                     let dateStr = data['Tanggal'];

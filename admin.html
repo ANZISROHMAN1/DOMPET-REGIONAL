@@ -157,6 +157,7 @@
                                 <option value="DISTRICT">DISTRICT</option>
                                 <option value="HI">HI</option>
                             </select>
+                            <input type="text" id="filter-sub-unit" class="form-control" placeholder="Cari Sub Unit..." style="width: 150px; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Filter Sub Unit">
                             <input type="date" id="filter-start" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Tanggal Mulai">
                             <span style="color: var(--text-muted);">sampai</span>
                             <input type="date" id="filter-end" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Tanggal Akhir">
@@ -172,7 +173,8 @@
                                     <th>ID</th>
                                     <th>Tanggal</th>
                                     <th>Nama</th>
-                                    <th>Unit & Sub Unit</th>
+                                    <th>Unit</th>
+                                    <th>Sub Unit</th>
                                     <th>Kegiatan</th>
                                     <th>Nominal</th>
                                     <th>Bank & Rekening</th>
@@ -183,7 +185,7 @@
                             </thead>
                             <tbody id="table-body">
                                 <tr>
-                                    <td colspan="10" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                    <td colspan="11" style="text-align: center; padding: 3rem; color: var(--text-muted);">
                                         <i class="ri-loader-4-line ri-spin" style="font-size: 2rem;"></i><br>Memuat data...
                                     </td>
                                 </tr>
@@ -207,14 +209,15 @@
                                 <table class="modern-table">
                                     <thead>
                                         <tr>
-                                            <th>Unit & Sub Unit</th>
+                                            <th>Unit</th>
+                                            <th>Sub Unit</th>
                                             <th>Jumlah Pengajuan</th>
                                             <th>Total Nominal (Rp)</th>
                                         </tr>
                                     </thead>
                                     <tbody id="report-summary-body">
                                         <tr>
-                                            <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">Memuat data...</td>
+                                            <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">Memuat data...</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -439,6 +442,7 @@
             document.getElementById('filter-start').value = '';
             document.getElementById('filter-end').value = '';
             if (document.getElementById('filter-unit')) document.getElementById('filter-unit').value = 'all';
+            if (document.getElementById('filter-sub-unit')) document.getElementById('filter-sub-unit').value = '';
             currentStatusFilter = 'all';
             fetchData();
         }
@@ -455,6 +459,15 @@
             const unitFilter = document.getElementById('filter-unit') ? document.getElementById('filter-unit').value : 'all';
             if (unitFilter !== 'all') {
                 filtered = filtered.filter(d => d.Unit === unitFilter);
+            }
+            
+            // 2.1 Filter by Sub Unit
+            const subUnitFilter = document.getElementById('filter-sub-unit') ? document.getElementById('filter-sub-unit').value.toLowerCase() : '';
+            if (subUnitFilter) {
+                filtered = filtered.filter(d => {
+                    const subUnit = d.Sub_Unit || d['Sub Unit'] || '';
+                    return subUnit.toLowerCase().includes(subUnitFilter);
+                });
             }
             
             // 3. Filter by Date Range
@@ -514,13 +527,17 @@
             // Update Table
             const tbody = document.getElementById('report-summary-body');
             if (labels.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tidak ada data</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">Tidak ada data</td></tr>`;
             } else {
                 let html = '';
                 labels.forEach(label => {
+                    let parts = label.split(' - ');
+                    let u = parts[0];
+                    let su = parts.length > 1 ? parts.slice(1).join(' - ') : '-';
                     html += `
                         <tr>
-                            <td style="font-weight: 500;">${label}</td>
+                            <td style="font-weight: 500;">${u}</td>
+                            <td style="color: var(--text-muted);">${su}</td>
                             <td>${unitSummary[label].count} Pengajuan</td>
                             <td style="font-weight: 600; color: var(--success-color);">${formatRupiah(unitSummary[label].total)}</td>
                         </tr>
@@ -530,7 +547,7 @@
                 const totalCount = counts.reduce((a, b) => a + b, 0);
                 html += `
                     <tr style="background: var(--bg-main);">
-                        <td style="font-weight: 700;">TOTAL KESELURUHAN</td>
+                        <td colspan="2" style="font-weight: 700;">TOTAL KESELURUHAN</td>
                         <td style="font-weight: 700;">${totalCount} Pengajuan</td>
                         <td style="font-weight: 700; color: var(--success-color); font-size: 1.1rem;">${formatRupiah(totalAmount)}</td>
                     </tr>
@@ -774,7 +791,7 @@
         function renderTable(data) {
             const tbody = document.getElementById('table-body');
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 3rem; color: var(--text-muted);"><i class="ri-inbox-line" style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem; color: #d1d5db;"></i>Belum ada data pengajuan</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; padding: 3rem; color: var(--text-muted);"><i class="ri-inbox-line" style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem; color: #d1d5db;"></i>Belum ada data pengajuan</td></tr>`;
                 return;
             }
             
@@ -802,10 +819,8 @@
                     <td>#${item.ID}</td>
                     <td>${dateStr}</td>
                     <td style="font-weight: 500;">${item.Nama}</td>
-                    <td>
-                        <div style="font-weight: 500;">${item.Unit || '-'}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">${item.Sub_Unit || item['Sub Unit'] || '-'}</div>
-                    </td>
+                    <td style="font-weight: 500;">${item.Unit || '-'}</td>
+                    <td style="color: var(--text-muted);">${item.Sub_Unit || item['Sub Unit'] || '-'}</td>
                     <td>${item.Kegiatan}</td>
                     <td style="font-weight: 600;">${formatRupiah(item.Nominal)}</td>
                     <td>
@@ -921,14 +936,14 @@
             for (let i = startIndex; i < data.length; i++) {
                 const row = data[i];
                 const namaAkun = row[0] || '';
-                const debit = row[1] ? formatRupiah(row[1]) : '-';
-                const kredit = row[2] ? formatRupiah(row[2]) : '-';
+                const debit = (row[1] !== '' && row[1] !== null && row[1] !== undefined) ? formatRupiah(row[1]) : '-';
+                const kredit = (row[2] !== '' && row[2] !== null && row[2] !== undefined) ? formatRupiah(row[2]) : '-';
                 
                 let rowStyle = '';
                 let nameStyle = '';
                 let valStyle = '';
                 
-                if (namaAkun === "Saldo Awal" || namaAkun === "Saldo Akhir") {
+                if (namaAkun === "Saldo Awal" || namaAkun.toUpperCase() === "SALDO AKHIR") {
                     rowStyle = 'background: var(--bg-main);';
                     nameStyle = 'font-weight: 700;';
                     valStyle = 'font-weight: 700; color: var(--success-color);';
