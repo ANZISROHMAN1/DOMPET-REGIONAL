@@ -196,15 +196,21 @@
                 </div> <!-- End of dashboard-view -->
 
                 <div id="report-view" style="display: none;">
+                    <div class="glass-card" style="margin-bottom: 2rem; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">Filter Laporan Keuangan</h3>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span style="font-weight: 500; color: var(--text-muted);">Bulan:</span>
+                            <select id="global-month-filter" onchange="fetchReportData()" class="form-control" style="width: 200px; padding: 0.5rem; border-radius: 8px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
+                                <option value="">Memuat filter...</option>
+                            </select>
+                            <button onclick="fetchReportData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
+                        </div>
+                    </div>
+
                     <!-- Financial Report Section -->
                     <div class="glass-card" style="margin-bottom: 2rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 600;">Laporan Keuangan per Unit</h2>
-                            <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                <select id="jago-month-filter" onchange="fetchJagoData()" class="form-control" style="width: 200px; padding: 0.5rem; border-radius: 8px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
-                                    <option value="">Memuat filter...</option>
-                                </select>
-                            </div>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: center;">
                             <div style="position: relative; height: 250px;">
@@ -234,7 +240,6 @@
                     <div class="glass-card" style="margin-bottom: 2rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 600;">Total Pengeluaran per Unit (Data Rekapan Jago)</h2>
-                            <button onclick="fetchJagoData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
                         </div>
                         <div style="position: relative; height: 350px;">
                             <canvas id="jagoChart"></canvas>
@@ -245,12 +250,6 @@
                     <div class="glass-card" style="margin-bottom: 2rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 600;">Neraca Keuangan</h2>
-                            <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                <select id="neraca-month-filter" onchange="fetchNeracaData()" class="form-control" style="width: 200px; padding: 0.5rem; border-radius: 8px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
-                                    <option value="">Memuat filter...</option>
-                                </select>
-                                <button onclick="fetchNeracaData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
-                            </div>
                         </div>
                         <div class="table-container">
                             <table class="modern-table">
@@ -302,14 +301,9 @@
                 if (unitChart) unitChart.resize();
                 
                 // Fetch data if not already fetched
-                if (!document.getElementById('jagoChart').dataset.fetched) {
-                    fetchJagoData();
-                    document.getElementById('jagoChart').dataset.fetched = "true";
-                }
-                
-                if (!document.getElementById('neraca-body').dataset.fetched) {
-                    fetchNeracaData();
-                    document.getElementById('neraca-body').dataset.fetched = "true";
+                if (!document.getElementById('report-view').dataset.fetched) {
+                    fetchReportData();
+                    document.getElementById('report-view').dataset.fetched = "true";
                 }
             }
         }
@@ -620,10 +614,14 @@
                 });
             }
         } 
+        function fetchReportData() {
+            fetchJagoData();
+            fetchNeracaData();
+        }
         
         async function fetchJagoData() {
             try {
-                const filterSelect = document.getElementById('jago-month-filter');
+                const filterSelect = document.getElementById('global-month-filter');
                 let monthParam = '';
                 if (filterSelect && filterSelect.value) {
                     monthParam = `&month=${encodeURIComponent(filterSelect.value)}`;
@@ -633,14 +631,15 @@
                 const result = await response.json();
                 
                 if (result.success && result.data) {
-                    // Update dropdown filter
-                    if (result.months && result.months.length > 0) {
+                    // Update global dropdown filter if it hasn't been populated
+                    if (result.months && result.months.length > 0 && filterSelect) {
+                        const currentVal = filterSelect.value || result.currentMonth;
                         filterSelect.innerHTML = '';
                         result.months.forEach(m => {
                             const option = document.createElement('option');
-                            option.value = m;
+                            option.value = m === 'Semua Bulan' ? '' : m;
                             option.textContent = m;
-                            if (result.currentMonth === m) option.selected = true;
+                            if (currentVal === option.value || currentVal === m) option.selected = true;
                             filterSelect.appendChild(option);
                         });
                     }
@@ -932,7 +931,7 @@
 
         async function fetchNeracaData() {
             try {
-                const filterSelect = document.getElementById('neraca-month-filter');
+                const filterSelect = document.getElementById('global-month-filter');
                 let monthParam = '';
                 if (filterSelect && filterSelect.value) {
                     monthParam = `&month=${encodeURIComponent(filterSelect.value)}`;
@@ -942,14 +941,15 @@
                 const result = await response.json();
                 
                 if (result.success && result.data) {
-                    // Update dropdown filter
-                    if (result.months && result.months.length > 0) {
+                    // Update global dropdown filter if it hasn't been populated
+                    if (result.months && result.months.length > 0 && filterSelect) {
+                        const currentVal = filterSelect.value || result.currentMonth;
                         filterSelect.innerHTML = '';
                         result.months.forEach(m => {
                             const option = document.createElement('option');
-                            option.value = m;
+                            option.value = m === 'Semua Bulan' ? '' : m;
                             option.textContent = m;
-                            if (result.currentMonth === m) option.selected = true;
+                            if (currentVal === option.value || currentVal === m) option.selected = true;
                             filterSelect.appendChild(option);
                         });
                     }
