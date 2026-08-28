@@ -200,6 +200,11 @@
                     <div class="glass-card" style="margin-bottom: 2rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 600;">Laporan Keuangan per Unit</h2>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <select id="jago-month-filter" onchange="fetchJagoData()" class="form-control" style="width: 200px; padding: 0.5rem; border-radius: 8px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
+                                    <option value="">Memuat filter...</option>
+                                </select>
+                            </div>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: center;">
                             <div style="position: relative; height: 250px;">
@@ -240,7 +245,12 @@
                     <div class="glass-card" style="margin-bottom: 2rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 600;">Neraca Keuangan</h2>
-                            <button onclick="fetchNeracaData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <select id="neraca-month-filter" onchange="fetchNeracaData()" class="form-control" style="width: 200px; padding: 0.5rem; border-radius: 8px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
+                                    <option value="">Memuat filter...</option>
+                                </select>
+                                <button onclick="fetchNeracaData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
+                            </div>
                         </div>
                         <div class="table-container">
                             <table class="modern-table">
@@ -613,10 +623,28 @@
         
         async function fetchJagoData() {
             try {
-                const response = await fetch(SCRIPT_URL + '?action=jago_data');
+                const filterSelect = document.getElementById('jago-month-filter');
+                let monthParam = '';
+                if (filterSelect && filterSelect.value) {
+                    monthParam = `&month=${encodeURIComponent(filterSelect.value)}`;
+                }
+                
+                const response = await fetch(SCRIPT_URL + '?action=jago_data' + monthParam);
                 const result = await response.json();
                 
                 if (result.success && result.data) {
+                    // Update dropdown filter
+                    if (result.months && result.months.length > 0) {
+                        filterSelect.innerHTML = '';
+                        result.months.forEach(m => {
+                            const option = document.createElement('option');
+                            option.value = m;
+                            option.textContent = m;
+                            if (result.currentMonth === m) option.selected = true;
+                            filterSelect.appendChild(option);
+                        });
+                    }
+                    
                     renderJagoPieChartAndTable(result.data);
                     renderJagoChart(result.data); // Keep the bar chart too if needed
                 } else {
@@ -904,10 +932,28 @@
 
         async function fetchNeracaData() {
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=neraca_data`);
+                const filterSelect = document.getElementById('neraca-month-filter');
+                let monthParam = '';
+                if (filterSelect && filterSelect.value) {
+                    monthParam = `&month=${encodeURIComponent(filterSelect.value)}`;
+                }
+                
+                const response = await fetch(`${SCRIPT_URL}?action=neraca_data${monthParam}`);
                 const result = await response.json();
                 
                 if (result.success && result.data) {
+                    // Update dropdown filter
+                    if (result.months && result.months.length > 0) {
+                        filterSelect.innerHTML = '';
+                        result.months.forEach(m => {
+                            const option = document.createElement('option');
+                            option.value = m;
+                            option.textContent = m;
+                            if (result.currentMonth === m) option.selected = true;
+                            filterSelect.appendChild(option);
+                        });
+                    }
+                    
                     renderNeracaTable(result.data);
                 } else {
                     console.error('Failed to fetch Neraca data:', result.message);
