@@ -301,7 +301,7 @@ function formatTransactions(sheet) {
 // --- TAMBAHAN UNTUK IMPORT PDF JAGO ---
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
-  ui.createMenu('⚡ TIF Regional')
+  ui.createMenu('⚡ Finance Regional')
       .addItem('📄 Import Rekapan Jago (PDF)', 'showImportDialog')
       .addToUi();
 }
