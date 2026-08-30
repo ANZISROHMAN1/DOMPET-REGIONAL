@@ -10,8 +10,8 @@ function onEdit(e) {
   if (!e) return;
   var sheet = e.range.getSheet();
   // Jika yang diedit adalah sheet REKAPAN JAGO (Kolom G) atau Neraca Keuangan (Filter Bulan di E2)
-  if ((sheet.getName() === 'REKAPAN JAGO' && e.range.getColumn() === 7) || 
-      (sheet.getName() === 'Neraca Keuangan' && e.range.getColumn() === 5 && e.range.getRow() === 2)) {
+  if ((sheet.getName() === 'REKAPAN JAGO WEB' && e.range.getColumn() === 7) || 
+      (sheet.getName() === 'NERACA KEUANGAN WEB' && e.range.getColumn() === 5 && e.range.getRow() === 2)) {
     try {
       updateNeracaKeuangan();
     } catch(err) {
@@ -22,7 +22,7 @@ function onEdit(e) {
 
 function doGet(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName('FORM USER') || ss.getActiveSheet();
+  var sheet = ss.getSheetByName('FORM USER WEB') || ss.getActiveSheet();
   var data = sheet.getDataRange().getValues();
   var action = e.parameter.action;
   
@@ -46,7 +46,7 @@ function doGet(e) {
     rows.reverse();
     return ContentService.createTextOutput(JSON.stringify({success: true, data: rows})).setMimeType(ContentService.MimeType.JSON);
   } else if (action === 'jago_data') {
-    var jagoSheet = ss.getSheetByName('REKAPAN JAGO');
+    var jagoSheet = ss.getSheetByName('REKAPAN JAGO WEB');
     if (!jagoSheet) return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Sheet REKAPAN JAGO tidak ditemukan'})).setMimeType(ContentService.MimeType.JSON);
     
     var CUTOFF_DATE = new Date(2026, 6, 30);
@@ -71,6 +71,9 @@ function doGet(e) {
 
     var jagoData = jagoSheet.getDataRange().getValues();
     var summaryData = {};
+    var categorySummary = {};
+    var trendData = {};
+    var tagihanRutin = [];
     var monthsSet = {};
     
     for (var k = 1; k < jagoData.length; k++) {
@@ -81,18 +84,39 @@ function doGet(e) {
       monthYear = monthYear.replace('January', 'Januari').replace('February', 'Februari').replace('March', 'Maret').replace('May', 'Mei').replace('June', 'Juni').replace('July', 'Juli').replace('August', 'Agustus').replace('October', 'Oktober').replace('December', 'Desember');
       monthsSet[monthYear] = true;
       
+      var amount = parseFloat(jagoData[k][4]) || 0;
+      var unit = jagoData[k][6] || 'Tanpa Unit';
+      var kategori = jagoData[k][7] || 'Lainnya';
+      var details = jagoData[k][2] || '';
+      var notes = jagoData[k][3] || '';
+      
+      // Hitung Trend Data (Semua bulan, tanpa terpengaruh filter)
+      if (!trendData[monthYear]) trendData[monthYear] = { income: 0, expense: 0 };
+      if (amount > 0) trendData[monthYear].income += amount;
+      if (amount < 0) trendData[monthYear].expense += Math.abs(amount);
+      
       if (filterMonth && filterMonth !== "Semua Bulan") {
           if (monthYear !== filterMonth) continue;
       }
       
-      var amount = parseFloat(jagoData[k][4]) || 0;
-      var unit = jagoData[k][6] || 'Tanpa Unit';
-      
-      if (amount < 0) { // Only count expenses
+      if (amount < 0) { // Only count expenses for summaries
         var absAmount = Math.abs(amount);
+        
+        // Unit summary
         if (!summaryData[unit]) summaryData[unit] = { count: 0, total: 0 };
         summaryData[unit].count += 1;
         summaryData[unit].total += absAmount;
+        
+        // Category summary
+        if (!categorySummary[kategori]) categorySummary[kategori] = { count: 0, total: 0 };
+        categorySummary[kategori].count += 1;
+        categorySummary[kategori].total += absAmount;
+        
+        // Deteksi Tagihan Rutin
+        var combinedText = (details + ' ' + notes).toLowerCase();
+        if (kategori.includes("Tagihan Rutin") || combinedText.includes("listrik") || combinedText.includes("internet") || combinedText.includes("wifi") || combinedText.includes("pdam") || combinedText.includes("sewa")) {
+            tagihanRutin.push({ date: Utilities.formatDate(rowDate, Session.getScriptTimeZone(), "dd MMM yyyy"), details: details + ' ' + notes, amount: absAmount, unit: unit, kategori: kategori });
+        }
       }
     }
     
@@ -101,17 +125,30 @@ function doGet(e) {
       resultData.push({ unit: u, count: summaryData[u].count, total: summaryData[u].total });
     }
     
+    var resultCategory = [];
+    for (var c in categorySummary) {
+      resultCategory.push({ kategori: c, count: categorySummary[c].count, total: categorySummary[c].total });
+    }
+    
+    var resultTrend = [];
+    for (var m in trendData) {
+      resultTrend.push({ month: m, income: trendData[m].income, expense: trendData[m].expense });
+    }
+    
     var availableMonths = ["Semua Bulan"].concat(Object.keys(monthsSet));
     var currentMonth = filterMonth || "Semua Bulan";
     
     return ContentService.createTextOutput(JSON.stringify({
         success: true, 
         data: resultData,
+        categoryData: resultCategory,
+        trendData: resultTrend,
+        tagihanRutin: tagihanRutin,
         months: availableMonths,
         currentMonth: currentMonth
     })).setMimeType(ContentService.MimeType.JSON);
   } else if (action === 'neraca_data') {
-    var neracaSheet = ss.getSheetByName('Neraca Keuangan');
+    var neracaSheet = ss.getSheetByName('NERACA KEUANGAN WEB');
     var filterMonth = e.parameter.month;
     if (filterMonth && neracaSheet) {
       neracaSheet.getRange("E2").setValue(filterMonth);
@@ -123,7 +160,7 @@ function doGet(e) {
       // ignore
     }
     
-    neracaSheet = ss.getSheetByName('Neraca Keuangan'); // Re-fetch in case it was just created
+    neracaSheet = ss.getSheetByName('NERACA KEUANGAN WEB'); // Re-fetch in case it was just created
     if (!neracaSheet) {
       return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Sheet Neraca Keuangan belum ada.'})).setMimeType(ContentService.MimeType.JSON);
     }
@@ -148,7 +185,7 @@ function doGet(e) {
         currentMonth: currentMonth
     })).setMimeType(ContentService.MimeType.JSON);
   } else if (action === 'debug_jago') {
-    var jagoSheet = ss.getSheetByName('REKAPAN JAGO');
+    var jagoSheet = ss.getSheetByName('REKAPAN JAGO WEB');
     var jagoData = jagoSheet ? jagoSheet.getDataRange().getValues() : [];
     return ContentService.createTextOutput(JSON.stringify({success: true, data: jagoData})).setMimeType(ContentService.MimeType.JSON);
   }
@@ -163,8 +200,8 @@ function doPost(e) {
     var requestData = JSON.parse(e.postData.contents);
     var action = requestData.action;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('FORM USER') || ss.getActiveSheet();
-    var sheetJago = ss.getSheetByName('REKAPAN JAGO');
+    var sheet = ss.getSheetByName('FORM USER WEB') || ss.getActiveSheet();
+    var sheetJago = ss.getSheetByName('REKAPAN JAGO WEB');
     
     // ID FOLDER SUDAH OTOMATIS SAYA MASUKKAN DI SINI! (TIDAK PERLU DIUBAH LAGI)
     var FOLDER_ID = '1GRHerfG8UMcQol4TY5HBvGS7NPXKYuL_'; 
@@ -196,7 +233,7 @@ function doPost(e) {
       var newId = new Date().getTime().toString().slice(-6);
       var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
       
-      var rowData = [newId, now, requestData.nama, requestData.kegiatan, requestData.nominal, requestData.bank, requestData.rekening, 'Pending', requestData.unit, requestData.sub_unit, fileUrl, '', fileHash];
+      var rowData = [newId, now, requestData.nama, requestData.kegiatan, requestData.nominal, requestData.bank, requestData.rekening, 'Pending', requestData.unit, requestData.sub_unit, fileUrl, '', fileHash, requestData.kategori || ''];
       sheet.appendRow(rowData);
       
       // Menambahkan data ke sheet REKAPAN JAGO dengan format khusus
@@ -206,7 +243,7 @@ function doPost(e) {
         var nominalStr = requestData.nominal ? requestData.nominal.toString().replace(/[^0-9]/g, '') : "0";
         var amount = -Math.abs(parseFloat(nominalStr)); // Pengeluaran (minus)
         
-        var jagoDataToInsert = [now, sourceDest, transDetails, requestData.kegiatan, amount, "", requestData.unit];
+        var jagoDataToInsert = [now, sourceDest, transDetails, requestData.kegiatan, amount, "", requestData.unit, requestData.kategori || ''];
         
         // Mencari baris kosong pertama di kolom A (Menghindari bug appendRow jika ada ArrayFormula)
         var jagoColA = sheetJago.getRange("A:A").getValues();
@@ -218,7 +255,7 @@ function doPost(e) {
           }
         }
         
-        sheetJago.getRange(jagoTargetRow, 1, 1, 7).setValues([jagoDataToInsert]);
+        sheetJago.getRange(jagoTargetRow, 1, 1, 8).setValues([jagoDataToInsert]);
         formatTransactions(sheetJago);
       }
       
@@ -428,7 +465,7 @@ function processParsedJagoData(transactions) {
   }
   
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName('REKAPAN JAGO');
+  var sheet = ss.getSheetByName('REKAPAN JAGO WEB');
   if (!sheet) throw new Error("Sheet bernama 'REKAPAN JAGO' tidak ditemukan!");
   
   // HAPUS SEMUA DATA LAMA (Karena kita akan timpa / overwrite sepenuhnya dari PDF)
@@ -447,6 +484,16 @@ function processParsedJagoData(transactions) {
     if (text.includes("bges") || text.includes("mbb")) return "BGES & MBB";
     if (text.includes("fbb")) return "FBB";
     return ""; // KOSONGKAN jika tidak dikenali agar tidak error validasi data
+  }
+  
+  function guessKategori(details, notes) {
+    var text = (details + " " + notes).toLowerCase();
+    if (text.includes("tiket") || text.includes("transport") || text.includes("grab") || text.includes("gojek") || text.includes("travel")) return "Transportasi & Perjalanan";
+    if (text.includes("makan") || text.includes("minum") || text.includes("konsumsi") || text.includes("snack") || text.includes("kopi")) return "Konsumsi";
+    if (text.includes("atk") || text.includes("kertas") || text.includes("tinta") || text.includes("material")) return "ATK & Material";
+    if (text.includes("listrik") || text.includes("air") || text.includes("internet") || text.includes("wifi") || text.includes("sewa")) return "Tagihan Rutin (Listrik/Air/Internet)";
+    if (text.includes("operasional")) return "Operasional";
+    return "Lainnya";
   }
   
   // --- BATAS TANGGAL IMPORT ---
@@ -512,6 +559,7 @@ function processParsedJagoData(transactions) {
     
     // Tebak Unit secara otomatis!
     var autoUnit = guessUnit(trx[1] + " " + trx[2], notes);
+    var autoKategori = guessKategori(trx[1] + " " + trx[2], notes);
     
     newRows.push([
       trx[0], // Date & Time
@@ -520,7 +568,8 @@ function processParsedJagoData(transactions) {
       notes,  // Corrected Notes
       amount,
       balance, // Actual Balance
-      autoUnit // Unit Cerdas Otomatis
+      autoUnit, // Unit Cerdas Otomatis
+      autoKategori // Kategori Cerdas Otomatis
     ]);
     addedCount++;
   }
@@ -543,13 +592,13 @@ function processParsedJagoData(transactions) {
 
 function updateNeracaKeuangan() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var jagoSheet = ss.getSheetByName('REKAPAN JAGO');
-  var neracaSheet = ss.getSheetByName('Neraca Keuangan');
+  var jagoSheet = ss.getSheetByName('REKAPAN JAGO WEB');
+  var neracaSheet = ss.getSheetByName('NERACA KEUANGAN WEB');
   
   if (!jagoSheet) return;
   
   if (!neracaSheet) {
-    neracaSheet = ss.insertSheet('Neraca Keuangan');
+    neracaSheet = ss.insertSheet('NERACA KEUANGAN WEB');
   }
   
   var data = jagoSheet.getDataRange().getValues();

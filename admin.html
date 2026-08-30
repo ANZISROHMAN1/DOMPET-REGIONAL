@@ -196,14 +196,59 @@
                 </div> <!-- End of dashboard-view -->
 
                 <div id="report-view" style="display: none;">
+                    
+                    <!-- AI Insight Card -->
+                    <div class="glass-card" style="margin-bottom: 2rem; background: linear-gradient(135deg, var(--bg-card), var(--primary-light)); border-left: 4px solid var(--primary-color);">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                            <div style="font-size: 1.5rem; color: var(--primary-color);"><i class="ri-lightbulb-flash-fill"></i></div>
+                            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">AI Insight</h3>
+                        </div>
+                        <p id="ai-insight-text" style="color: var(--text-main); line-height: 1.5; margin: 0; font-size: 0.95rem;">Menganalisis data keuangan...</p>
+                    </div>
+
+                    <!-- Overview Cards -->
+                    <div class="dashboard-stats" style="margin-bottom: 2rem;">
+                        <div class="stat-card">
+                            <div class="stat-icon green"><i class="ri-arrow-right-down-line"></i></div>
+                            <div class="stat-details">
+                                <h3 id="stat-kas-masuk">Rp 0</h3>
+                                <p>Kas Masuk</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon red"><i class="ri-arrow-right-up-line"></i></div>
+                            <div class="stat-details">
+                                <h3 id="stat-kas-keluar">Rp 0</h3>
+                                <p>Kas Keluar</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon blue"><i class="ri-wallet-3-line"></i></div>
+                            <div class="stat-details">
+                                <h3 id="stat-sisa-saldo">Rp 0</h3>
+                                <p>Sisa Saldo</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="glass-card" style="margin-bottom: 2rem; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
                         <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">Filter Laporan Keuangan</h3>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <span style="font-weight: 500; color: var(--text-muted);">Bulan:</span>
+                            <span style="font-weight: 500; color: var(--text-muted);">Bulan/Tahun:</span>
                             <select id="global-month-filter" onchange="fetchReportData()" class="form-control" style="width: 200px; padding: 0.5rem; border-radius: 8px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
                                 <option value="">Memuat filter...</option>
                             </select>
                             <button onclick="fetchReportData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Trend Chart Section -->
+                    <div class="glass-card" style="margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h2 style="font-size: 1.25rem; font-weight: 600;">Trend Pemasukan & Pengeluaran</h2>
+                        </div>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="trendChart"></canvas>
                         </div>
                     </div>
 
@@ -237,12 +282,39 @@
                     </div>
                     
                     <!-- Rekapan Jago Report Section -->
-                    <div class="glass-card" style="margin-bottom: 2rem;">
+                    <div class="glass-card" style="margin-bottom: 2rem; display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 600;">Total Pengeluaran per Unit (Data Rekapan Jago)</h2>
                         </div>
                         <div style="position: relative; height: 350px;">
                             <canvas id="jagoChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Kategori & Tagihan Rutin Section -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                        <div class="glass-card">
+                            <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Pengeluaran per Kategori</h2>
+                            <div style="position: relative; height: 250px;">
+                                <canvas id="kategoriPieChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="glass-card" style="display: flex; flex-direction: column;">
+                            <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Tagihan Rutin Bulanan</h2>
+                            <div class="table-container" style="flex: 1; max-height: 250px; overflow-y: auto;">
+                                <table class="modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Deskripsi</th>
+                                            <th>Nominal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tagihan-rutin-body">
+                                        <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Memuat data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
@@ -279,7 +351,7 @@
 
     <script>
         // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydaSlqJ8BPOPhnKd3P6j_lP84Ygfb3Vt7yCkF_tJRCZOeXmAOPh4Gm-wqBWpEazp5fCg/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9Cl0QmgpxBnvgPjuwm-Hw2wu-VyV3SVC7UHCA2PxWI49XlzzyWNTCuxP7Y5RxGlNn/exec';
         
         function switchTab(tabId) {
             document.getElementById('nav-dashboard').classList.remove('active');
@@ -318,6 +390,8 @@
         let unreadNotifCount = 0;
         let unitChart = null;
         let jagoChart = null;
+        let trendChartObj = null;
+        let kategoriChartObj = null;
 
         // Simple auth
         const ADMIN_PWD = 'admin123';
@@ -645,7 +719,13 @@
                     }
                     
                     renderJagoPieChartAndTable(result.data);
-                    renderJagoChart(result.data); // Keep the bar chart too if needed
+                    // renderJagoChart(result.data); // Hide bar chart since we have pie and trend now
+                    
+                    if (result.categoryData) renderCategoryPieChart(result.categoryData);
+                    if (result.trendData) renderTrendChart(result.trendData);
+                    if (result.tagihanRutin) renderTagihanRutin(result.tagihanRutin);
+                    
+                    generateAIInsight(result);
                 } else {
                     console.error('Failed to fetch Jago data:', result.message);
                 }
@@ -747,6 +827,143 @@
                     }
                 });
             }
+        }
+        
+        function renderCategoryPieChart(categoryData) {
+            const ctx = document.getElementById('kategoriPieChart');
+            if (!ctx) return;
+            if (kategoriChartObj) kategoriChartObj.destroy();
+            
+            categoryData.sort((a, b) => b.total - a.total);
+            const labels = categoryData.map(d => d.kategori);
+            const amounts = categoryData.map(d => d.total);
+            
+            if (labels.length > 0) {
+                const bgColors = ['#f43f5e', '#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#64748b', '#d946ef'];
+                kategoriChartObj = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{ data: amounts, backgroundColor: bgColors.slice(0, labels.length), borderWidth: 0 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { color: document.documentElement.getAttribute('data-theme') === 'light' ? '#1f2937' : '#f9fafb' } },
+                            tooltip: { callbacks: { label: function(c) { return (c.label ? c.label + ': ' : '') + formatRupiah(c.parsed); } } }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function renderTrendChart(trendData) {
+            const ctx = document.getElementById('trendChart');
+            if (!ctx) return;
+            if (trendChartObj) trendChartObj.destroy();
+            
+            // Sort by month chronologically if possible, or just keep as is
+            const labels = trendData.map(d => d.month);
+            const incomes = trendData.map(d => d.income);
+            const expenses = trendData.map(d => d.expense);
+            
+            trendChartObj = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Pemasukan', data: incomes, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 },
+                        { label: 'Pengeluaran', data: expenses, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { ticks: { callback: function(val) { return 'Rp ' + (val/1000000) + 'M'; } } }
+                    },
+                    plugins: { tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + formatRupiah(c.parsed.y); } } } }
+                }
+            });
+        }
+        
+        function renderTagihanRutin(tagihanRutin) {
+            const tbody = document.getElementById('tagihan-rutin-body');
+            if (!tbody) return;
+            if (tagihanRutin.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Tidak ada tagihan rutin pada bulan ini.</td></tr>`;
+                return;
+            }
+            
+            let html = '';
+            tagihanRutin.forEach(t => {
+                html += `<tr>
+                    <td style="font-size: 0.85rem; color: var(--text-muted);">${t.date}</td>
+                    <td><div style="font-weight: 500;">${t.kategori}</div><div style="font-size: 0.85rem; color: var(--text-muted);">${t.details.substring(0,40)}</div></td>
+                    <td style="font-weight: 600; color: var(--danger-color);">${formatRupiah(t.amount)}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+        
+        function generateAIInsight(result) {
+            const insightText = document.getElementById('ai-insight-text');
+            if (!insightText) return;
+            
+            if (!result.data || result.data.length === 0) {
+                insightText.innerText = "Belum ada data keuangan yang cukup untuk dianalisis pada periode ini.";
+                return;
+            }
+            
+            let totalExpense = result.data.reduce((acc, curr) => acc + curr.total, 0);
+            let topUnit = result.data.reduce((prev, current) => (prev.total > current.total) ? prev : current);
+            let topKategori = result.categoryData && result.categoryData.length > 0 ? result.categoryData.reduce((prev, current) => (prev.total > current.total) ? prev : current) : null;
+            
+            let totalIncome = 0;
+            if (result.trendData) {
+                 const currentMonthTrend = result.trendData.find(d => d.month === result.currentMonth);
+                 if (currentMonthTrend) totalIncome = currentMonthTrend.income;
+                 else totalIncome = result.trendData.reduce((acc, curr) => acc + curr.income, 0);
+            }
+            
+            // Update Overview Cards
+            document.getElementById('stat-kas-masuk').innerText = formatRupiah(totalIncome);
+            document.getElementById('stat-kas-keluar').innerText = formatRupiah(totalExpense);
+            document.getElementById('stat-sisa-saldo').innerText = formatRupiah(totalIncome - totalExpense);
+            
+            let insightMsg = `Pada periode <strong>${result.currentMonth}</strong>, tercatat kas masuk sebesar <strong>${formatRupiah(totalIncome)}</strong> dan kas keluar sebesar <strong>${formatRupiah(totalExpense)}</strong>. Sisa saldo operasional adalah <strong>${formatRupiah(totalIncome - totalExpense)}</strong>.<br>`;
+            
+            if (topUnit && topUnit.total > 0) {
+                insightMsg += `<br>• Pengeluaran terbesar dialokasikan untuk unit <strong>${topUnit.unit}</strong> senilai ${formatRupiah(topUnit.total)}. `;
+            }
+            if (topKategori && topKategori.total > 0) {
+                let pct = Math.round((topKategori.total / totalExpense) * 100);
+                insightMsg += `<br>• Dilihat dari jenisnya, kategori <strong>${topKategori.kategori}</strong> mendominasi sebesar <strong>${pct}%</strong> dari total pengeluaran. `;
+            }
+            
+            // Check trend
+            if (result.trendData && result.trendData.length >= 2) {
+                let thisMonth = result.trendData[result.trendData.length-1];
+                let lastMonth = result.trendData[result.trendData.length-2];
+                if (result.currentMonth !== "Semua Bulan") {
+                     const currentIdx = result.trendData.findIndex(d => d.month === result.currentMonth);
+                     if (currentIdx > 0) {
+                         thisMonth = result.trendData[currentIdx];
+                         lastMonth = result.trendData[currentIdx-1];
+                     }
+                }
+                
+                if (lastMonth && lastMonth.expense > 0 && thisMonth) {
+                    let diff = thisMonth.expense - lastMonth.expense;
+                    let diffPct = Math.round(Math.abs(diff) / lastMonth.expense * 100);
+                    if (diff > 0) {
+                        insightMsg += `<br>• <span style="color:var(--danger-color);">Terdapat kenaikan pengeluaran sebesar ${diffPct}%</span> dibandingkan bulan sebelumnya (${lastMonth.month}).`;
+                    } else {
+                        insightMsg += `<br>• <span style="color:var(--success-color);">Pengeluaran berhasil ditekan turun ${diffPct}%</span> dibandingkan bulan sebelumnya (${lastMonth.month}). Pertahankan efisiensi ini!`;
+                    }
+                }
+            }
+            
+            insightText.innerHTML = insightMsg;
         }
         
         function renderJagoChart(data) {

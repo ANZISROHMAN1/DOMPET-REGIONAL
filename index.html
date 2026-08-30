@@ -108,6 +108,19 @@
                         </div>
                         
                         <div class="form-group">
+                            <label for="kategori">Kategori Pengeluaran</label>
+                            <select id="kategori" class="form-control" required>
+                                <option value="" disabled selected>Pilih Kategori</option>
+                                <option value="Operasional">Operasional</option>
+                                <option value="Transportasi & Perjalanan">Transportasi & Perjalanan</option>
+                                <option value="Konsumsi">Konsumsi</option>
+                                <option value="ATK & Material">ATK & Material</option>
+                                <option value="Tagihan Rutin (Listrik/Air/Internet)">Tagihan Rutin</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
                             <label for="kegiatan">Deskripsi Kegiatan</label>
                             <input type="text" id="kegiatan" class="form-control" placeholder="Contoh: Beli keperluan ATK kantor" required>
                         </div>
@@ -161,7 +174,7 @@
     
     <script>
         // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNTEiLhjzVy6Hw1SYCSqBSzzQg6DIBqzN3om8XYihatzhcN_3hiZjWe_wMhNv00G2ENw/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9Cl0QmgpxBnvgPjuwm-Hw2wu-VyV3SVC7UHCA2PxWI49XlzzyWNTCuxP7Y5RxGlNn/exec';
         
         const subUnitData = {
             "OSP": ["ACS MAINTENANCE", "CAM DWDM", "BACKBONE"],
@@ -237,6 +250,7 @@
                 nominal: document.getElementById('nominal').value,
                 bank: document.getElementById('bank').value,
                 rekening: document.getElementById('rekening').value,
+                kategori: document.getElementById('kategori').value,
                 kegiatan: document.getElementById('kegiatan').value,
                 fileName: file.name,
                 mimeType: file.type
