@@ -261,7 +261,7 @@
                     }
                 } catch (error) {
                     if (error.message.includes('Failed to fetch') || error.message.includes('jaringan')) {
-                        showAlert('Gagal: Nota sudah pernah diajukan (atau koneksi terputus).', 'error');
+                        showAlert('Gagal: Koneksi terputus atau terjadi kesalahan pada Google Script (Periksa Apps Script).', 'error');
                     } else {
                         showAlert('Kesalahan sistem: ' + error.message, 'error');
                     }
