@@ -76,7 +76,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="unit">Unit</label>
-                                <select id="unit" class="form-control" required onchange="updateSubUnit()">
+                                <select id="unit" class="form-control" required>
                                     <option value="" disabled selected>Pilih Unit</option>
                                     <option value="EASTERN">EASTERN</option>
                                     <option value="BOGOR">BOGOR</option>
@@ -97,9 +97,7 @@
                             
                             <div class="form-group">
                                 <label for="sub_unit">Sub Unit</label>
-                                <select id="sub_unit" class="form-control" required>
-                                    <option value="" disabled selected>Pilih Sub Unit</option>
-                                </select>
+                                <input type="text" id="sub_unit" class="form-control" placeholder="Contoh: ACS MAINTENANCE (Boleh kosong)">
                             </div>
                         </div>
                         
@@ -184,31 +182,7 @@
         // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9Cl0QmgpxBnvgPjuwm-Hw2wu-VyV3SVC7UHCA2PxWI49XlzzyWNTCuxP7Y5RxGlNn/exec';
         
-        const subUnitData = {
-            "OSP": ["ACS MAINTENANCE", "CAM DWDM", "BACKBONE"],
-            "ISP": ["NE", "DEVA", "IP"],
-            "FBB": ["PSB", "ASC"],
-            "MBB": ["PSB"],
-            "DISTRICT": ["MEETING EXPANDED", "DOMESTIC TRAVELING", "OPERATIONAL / ICIDENTAL", "HI - PERIZINAN / COMMCAST"],
-            "HI": ["perizinan", "kegiatan HI"]
-        };
 
-        function updateSubUnit() {
-            const unitSelect = document.getElementById('unit');
-            const subUnitSelect = document.getElementById('sub_unit');
-            const selectedUnit = unitSelect.value;
-            
-            subUnitSelect.innerHTML = '<option value="" disabled selected>Pilih Sub Unit</option>';
-            
-            if (selectedUnit && subUnitData[selectedUnit]) {
-                subUnitData[selectedUnit].forEach(subUnit => {
-                    const option = document.createElement('option');
-                    option.value = subUnit;
-                    option.textContent = subUnit;
-                    subUnitSelect.appendChild(option);
-                });
-            }
-        }
 
         function updateFileName(input) {
             const textElement = document.getElementById('fileText');
