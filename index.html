@@ -180,7 +180,7 @@
     
     <script>
         // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9Cl0QmgpxBnvgPjuwm-Hw2wu-VyV3SVC7UHCA2PxWI49XlzzyWNTCuxP7Y5RxGlNn/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzwk73H8KyCLD74jYqvG3bHP1FhEGHeztqB6HoL1E0MTUWLOfs-IYtb7COhEps1Nkj8sQ/exec';
         
 
 
@@ -260,11 +260,11 @@
                         btn.disabled = false;
                     }
                 } catch (error) {
-                    if (error.message.includes('Failed to fetch') || error.message.includes('jaringan')) {
-                        showAlert('Gagal: Koneksi terputus atau terjadi kesalahan pada Google Script (Periksa Apps Script).', 'error');
-                    } else {
-                        showAlert('Kesalahan sistem: ' + error.message, 'error');
-                    }
+                    console.error("Fetch error detail:", error);
+                    let errStr = "Nama Error: " + error.name + "<br>Pesan: " + error.message;
+                    if(error.stack) errStr += "<br>Stack: " + error.stack;
+                    showAlert('DEBUG INFO (Tolong screenshot ini):<br>' + errStr, 'error');
+                    
                     btn.innerHTML = '<i class="ri-send-plane-fill"></i> Kirim Pengajuan';
                     btn.disabled = false;
                 }
