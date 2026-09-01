@@ -26,7 +26,7 @@ function doGet(e) {
   var data = sheet.getDataRange().getValues();
   var action = e.parameter.action;
   
-  var expectedHeaders = ['ID', 'TANGGAL', 'NAMA', 'KEGIATAN', 'NOMINAL', 'BANK', 'REKENING', 'STATUS', 'UNIT', 'SUB_UNIT', 'BUKTI', 'KETERANGAN', 'FILE_HASH', 'KATEGORI'];
+  var expectedHeaders = ['ID', 'Tanggal', 'Nama', 'Kegiatan', 'Nominal', 'Bank', 'Rekening', 'Status', 'Unit', 'Sub_Unit', 'Bukti_Path', 'Bukti_TF_Path', 'File_Hash', 'Kategori'];
   
   var hasHeader = (data.length > 0 && String(data[0][0]).toUpperCase() === 'ID');
   var headers = hasHeader ? data[0] : expectedHeaders;
