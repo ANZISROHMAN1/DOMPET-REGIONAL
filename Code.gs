@@ -26,9 +26,14 @@ function doGet(e) {
   var data = sheet.getDataRange().getValues();
   var action = e.parameter.action;
   
-  var headers = data[0];
+  var expectedHeaders = ['ID', 'TANGGAL', 'NAMA', 'KEGIATAN', 'NOMINAL', 'BANK', 'REKENING', 'STATUS', 'UNIT', 'SUB_UNIT', 'BUKTI', 'KETERANGAN', 'FILE_HASH', 'KATEGORI'];
+  
+  var hasHeader = (data.length > 0 && String(data[0][0]).toUpperCase() === 'ID');
+  var headers = hasHeader ? data[0] : expectedHeaders;
+  var startIndex = hasHeader ? 1 : 0;
+  
   var rows = [];
-  for (var i = 1; i < data.length; i++) {
+  for (var i = startIndex; i < data.length; i++) {
     var row = {};
     for (var j = 0; j < headers.length; j++) {
       row[headers[j]] = data[i][j];
