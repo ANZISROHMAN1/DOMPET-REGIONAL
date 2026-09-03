@@ -175,7 +175,7 @@
                 <!-- History Table -->
                 <div class="glass-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                        <h2 style="font-size: 1.25rem; font-weight: 600;">Riwayat Pengajuan</h2>
+                        <h2 style="font-size: 1.25rem; font-weight: 600;">Riwayat Tagihan Rutin</h2>
                         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                             <select id="filter-unit" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Filter Unit">
                                 <option value="all">Semua Unit</option>
@@ -201,14 +201,10 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Tanggal</th>
-                                    <th>Nama</th>
-                                    <th>Unit</th>
-                                    <th>Sub Unit</th>
-                                    <th>Kegiatan</th>
+                                    <th>Keterangan</th>
                                     <th>Nominal</th>
-                                    <th>Bank & Rekening</th>
-                                    <th>Bukti</th>
                                     <th>Status</th>
+                                    <th>Bukti</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -513,7 +509,7 @@
             }
             
             try {
-                const response = await fetch(SCRIPT_URL + '?action=list');
+                const response = await fetch(SCRIPT_URL + '?action=tagihan_rutin_list');
                 const result = await response.json();
                 
                 if (result.success) {
@@ -547,8 +543,21 @@
 
         function updateStats(data) {
             document.getElementById('stat-total').innerText = data.length;
-            document.getElementById('stat-pending').innerText = data.filter(d => d.Status === 'Pending').length;
-            document.getElementById('stat-approved').innerText = data.filter(d => d.Status === 'Approved').length;
+            let pendingCount = 0;
+            let approvedCount = 0;
+            data.forEach(d => {
+                let statusVal = '';
+                for (let key in d) {
+                    if (key.toLowerCase().includes('status')) {
+                        statusVal = String(d[key]).toLowerCase();
+                        break;
+                    }
+                }
+                if (statusVal.includes('belum') || statusVal.includes('pending')) pendingCount++;
+                else if (statusVal.includes('dibayar') || statusVal.includes('selesai') || statusVal.includes('approved')) approvedCount++;
+            });
+            document.getElementById('stat-pending').innerText = pendingCount;
+            document.getElementById('stat-approved').innerText = approvedCount;
         }
 
         function filterTable(status) {
@@ -1105,47 +1114,57 @@
             });
         }
 
+        function getColValue(item, searchKeys) {
+            for (let key in item) {
+                for (let sk of searchKeys) {
+                    if (key.toLowerCase().includes(sk.toLowerCase())) return item[key];
+                }
+            }
+            return '';
+        }
+
         function renderTable(data) {
             const tbody = document.getElementById('table-body');
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="11" style="text-align: center; padding: 3rem; color: var(--text-muted);"><i class="ri-inbox-line" style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem; color: #d1d5db;"></i>Belum ada data pengajuan</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);"><i class="ri-inbox-line" style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem; color: #d1d5db;"></i>Belum ada data tagihan rutin</td></tr>`;
                 return;
             }
             
             let html = '';
-            data.forEach(item => {
-                let dateStr = item.Tanggal;
+            data.forEach((item, index) => {
+                let id = getColValue(item, ['id', 'no']) || (index + 1);
+                let dateStr = getColValue(item, ['tanggal', 'bulan', 'periode']);
                 if (typeof dateStr === 'string') dateStr = dateStr.split('T')[0];
                 
+                let keterangan = getColValue(item, ['nama', 'keterangan', 'deskripsi', 'unit', 'kegiatan']);
+                let nominal = getColValue(item, ['nominal', 'jumlah', 'total', 'biaya', 'amount']);
+                let status = String(getColValue(item, ['status'])).trim() || 'Belum Dibayar';
+                let buktiPath = getColValue(item, ['bukti', 'transfer', 'tf', 'link']);
+                
+                let isDibayar = status.toLowerCase().includes('dibayar') || status.toLowerCase().includes('selesai') || status.toLowerCase().includes('approved');
+                
                 let actionHtml = '';
-                if (item.Status === 'Pending') {
-                    actionHtml = `
-                        <button onclick="triggerApprove(${item.row_index})" class="btn btn-sm btn-success" title="Approve & Upload TF"><i class="ri-upload-cloud-line"></i> TF</button>
-                        <button onclick="updateStatus(${item.row_index}, 'Rejected')" class="btn btn-sm btn-danger" title="Tolak"><i class="ri-close-line"></i></button>
-                    `;
+                if (!isDibayar) {
+                    actionHtml = `<button onclick="triggerUploadBukti(${item.row_index})" class="btn btn-sm btn-success" title="Upload Bukti Transfer"><i class="ri-upload-cloud-line"></i> Upload Bukti</button>`;
                 } else {
-                    actionHtml = `<span style="color: var(--text-muted); font-size: 0.85rem;">-</span>`;
+                    actionHtml = `<span style="color: var(--success-color); font-weight: 600;"><i class="ri-check-line"></i> Selesai</span>`;
                 }
                 
                 let buktiHtml = '';
-                if (item.Bukti_Path) buktiHtml += `<a href="${item.Bukti_Path}" target="_blank" class="nota-link"><i class="ri-attachment-line"></i> Nota</a>`;
-                if (item.Bukti_TF_Path) buktiHtml += `<br><a href="${item.Bukti_TF_Path}" target="_blank" class="nota-link" style="color: var(--success-color);"><i class="ri-check-double-line"></i> Bukti TF</a>`;
+                if (buktiPath) {
+                    buktiHtml = `<a href="${buktiPath}" target="_blank" class="nota-link" style="color: var(--primary-color);"><i class="ri-attachment-line"></i> Lihat Bukti</a>`;
+                } else {
+                    buktiHtml = `<span style="color: var(--text-muted); font-size: 0.85rem;">-</span>`;
+                }
 
                 html += `
                 <tr>
-                    <td>#${item.ID}</td>
+                    <td>#${id}</td>
                     <td>${dateStr}</td>
-                    <td style="font-weight: 500;">${item.Nama}</td>
-                    <td style="font-weight: 500;">${item.Unit || '-'}</td>
-                    <td style="color: var(--text-muted);">${item.Sub_Unit || item['Sub Unit'] || '-'}</td>
-                    <td>${item.Kegiatan}</td>
-                    <td style="font-weight: 600;">${formatRupiah(item.Nominal)}</td>
-                    <td>
-                        <div style="font-weight: 500;">${item.Bank}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">${item.Rekening}</div>
-                    </td>
+                    <td style="font-weight: 500;">${keterangan}</td>
+                    <td style="font-weight: 600;">${formatRupiah(nominal)}</td>
+                    <td><span class="status-badge ${isDibayar ? 'status-approved' : 'status-pending'}">${status}</span></td>
                     <td>${buktiHtml}</td>
-                    <td><span class="status-badge status-${item.Status.toLowerCase()}">${item.Status}</span></td>
                     <td>${actionHtml}</td>
                 </tr>
                 `;
@@ -1153,37 +1172,27 @@
             tbody.innerHTML = html;
         }
 
-        function triggerApprove(rowIndex) {
+        function triggerUploadBukti(rowIndex) {
             pendingUpdateRowId = rowIndex;
-            pendingUpdateStatus = 'Approved';
             document.getElementById('tf-upload-input').click();
         }
 
         document.getElementById('tf-upload-input').addEventListener('change', function(e) {
             if (this.files && this.files[0]) {
-                if (confirm('Kirim bukti transfer dan setujui pengajuan ini?')) {
-                    processUpdate(this.files[0]);
+                if (confirm('Kirim bukti transfer dan tandai tagihan ini selesai?')) {
+                    processUpdateTagihan(this.files[0]);
                 }
                 this.value = ''; // reset
             }
         });
 
-        async function updateStatus(rowIndex, status) {
-            if (confirm(`Yakin ingin mengubah status menjadi ${status}?`)) {
-                pendingUpdateRowId = rowIndex;
-                pendingUpdateStatus = status;
-                processUpdate(null);
-            }
-        }
-
-        async function processUpdate(file) {
+        async function processUpdateTagihan(file) {
             const payload = {
-                action: 'update_status',
-                row_index: pendingUpdateRowId,
-                status: pendingUpdateStatus
+                action: 'upload_bukti_tagihan',
+                row_index: pendingUpdateRowId
             };
             
-            showAlert('Memproses update...', 'success');
+            showAlert('Mengunggah bukti transfer...', 'success');
             
             if (file) {
                 payload.fileName = file.name;
@@ -1195,8 +1204,6 @@
                     sendUpdatePayload(payload);
                 };
                 reader.readAsDataURL(file);
-            } else {
-                sendUpdatePayload(payload);
             }
         }
 

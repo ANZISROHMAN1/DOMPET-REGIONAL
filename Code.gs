@@ -213,6 +213,28 @@ function doGet(e) {
     var jagoData = jagoSheet ? jagoSheet.getDataRange().getValues() : [];
     return ContentService.createTextOutput(JSON.stringify({success: true, data: jagoData})).setMimeType(ContentService.MimeType.JSON);
   }
+  else if (action === 'tagihan_rutin_list') {
+    var tagihanSheet = ss.getSheetByName('TAGIHAN RUTIN WEB');
+    if (!tagihanSheet) return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Sheet TAGIHAN RUTIN WEB tidak ditemukan'})).setMimeType(ContentService.MimeType.JSON);
+    
+    var data = tagihanSheet.getDataRange().getValues();
+    if (data.length < 2) return ContentService.createTextOutput(JSON.stringify({success: true, data: []})).setMimeType(ContentService.MimeType.JSON);
+    
+    var headers = data[0];
+    var rows = [];
+    for (var i = 1; i < data.length; i++) {
+      var row = {};
+      for (var j = 0; j < headers.length; j++) {
+        var headerName = String(headers[j]).trim();
+        if (headerName === '') headerName = 'Column' + j;
+        row[headerName] = data[i][j];
+      }
+      row['row_index'] = i + 1;
+      rows.push(row);
+    }
+    rows.reverse(); // newest first
+    return ContentService.createTextOutput(JSON.stringify({success: true, data: rows})).setMimeType(ContentService.MimeType.JSON);
+  }
   return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Action not found'})).setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -298,6 +320,34 @@ function doPost(e) {
       sheet.getRange(rowIndex, 8).setValue(requestData.status);
       if (tfUrl) sheet.getRange(rowIndex, 12).setValue(tfUrl);
       return ContentService.createTextOutput(JSON.stringify({success: true})).setMimeType(ContentService.MimeType.JSON);
+    } else if (action === 'upload_bukti_tagihan') {
+      var sheetTagihan = ss.getSheetByName('TAGIHAN RUTIN WEB');
+      if (!sheetTagihan) return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Sheet tidak ditemukan'})).setMimeType(ContentService.MimeType.JSON);
+      
+      var rowIndex = parseInt(requestData.row_index);
+      var fileUrl = '';
+      if (requestData.fileData && requestData.fileName && requestData.mimeType) {
+        var base64Data = requestData.fileData.split(',')[1] || requestData.fileData;
+        var byteData = Utilities.base64Decode(base64Data);
+        var blob = Utilities.newBlob(byteData, requestData.mimeType, requestData.fileName);
+        var file = folder.createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        fileUrl = file.getUrl();
+      }
+      
+      var headers = sheetTagihan.getRange(1, 1, 1, sheetTagihan.getLastColumn()).getValues()[0];
+      var statusCol = -1;
+      var buktiCol = -1;
+      for (var i = 0; i < headers.length; i++) {
+        var h = String(headers[i]).toLowerCase();
+        if (h.includes('status')) statusCol = i + 1;
+        if (h.includes('bukti') || h.includes('transfer') || h.includes('tf')) buktiCol = i + 1;
+      }
+      
+      if (statusCol > 0) sheetTagihan.getRange(rowIndex, statusCol).setValue('Dibayar');
+      if (buktiCol > 0 && fileUrl) sheetTagihan.getRange(rowIndex, buktiCol).setValue(fileUrl);
+      
+      return ContentService.createTextOutput(JSON.stringify({success: true, fileUrl: fileUrl})).setMimeType(ContentService.MimeType.JSON);
     }
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({success: false, message: err.message})).setMimeType(ContentService.MimeType.JSON);
