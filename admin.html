@@ -784,7 +784,7 @@
                 totalCount += item.count;
                 
                 html += `
-                    <tr onclick='showUnitDetails(${JSON.stringify(item.transactions).replace(/'/g, "&apos;")}, "${item.unit}")' style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--border-color)'" onmouseout="this.style.backgroundColor=''">
+                    <tr onclick='showUnitDetails(${item.transactions ? JSON.stringify(item.transactions).replace(/'/g, "&apos;") : "[]"}, "${item.unit}")' style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--border-color)'" onmouseout="this.style.backgroundColor=''">
                         <td style="font-weight: 500;">${item.unit}</td>
                         <td>${item.count} Pengajuan</td>
                         <td style="font-weight: 600; color: var(--success-color);">${formatRupiah(item.total)}</td>
