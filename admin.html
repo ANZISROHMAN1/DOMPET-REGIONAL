@@ -265,7 +265,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 600;">Laporan Keuangan per Unit</h2>
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: center;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center;">
                             <div style="position: relative; height: 250px;">
                                 <canvas id="unitPieChart"></canvas>
                             </div>
@@ -662,7 +662,7 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'bottom',
+                                position: 'right',
                                 labels: { 
                                     color: document.documentElement.getAttribute('data-theme') === 'light' ? '#1f2937' : '#f9fafb',
                                     padding: 20
@@ -820,7 +820,7 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'bottom',
+                                position: 'right',
                                 labels: { 
                                     color: document.documentElement.getAttribute('data-theme') === 'light' ? '#1f2937' : '#f9fafb',
                                     padding: 20
@@ -869,7 +869,7 @@
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         plugins: {
-                            legend: { position: 'bottom', labels: { color: document.documentElement.getAttribute('data-theme') === 'light' ? '#1f2937' : '#f9fafb' } },
+                            legend: { position: 'right', labels: { color: document.documentElement.getAttribute('data-theme') === 'light' ? '#1f2937' : '#f9fafb' } },
                             tooltip: { callbacks: { label: function(c) { return (c.label ? c.label + ': ' : '') + formatRupiah(c.parsed); } } }
                         }
                     }
