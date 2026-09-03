@@ -201,6 +201,17 @@
 
                 <div id="report-view" style="display: none;">
                     
+                    <!-- Filter Laporan Keuangan -->
+                    <div class="glass-card" style="margin-bottom: 2rem; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">Filter Laporan Keuangan</h3>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span style="font-weight: 500; color: var(--text-muted);">Bulan/Tahun:</span>
+                            <select id="global-month-filter" onchange="fetchReportData()" class="form-control" style="width: 200px; padding: 0.5rem; border-radius: 8px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
+                                <option value="">Memuat filter...</option>
+                            </select>
+                            <button onclick="fetchReportData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
+                        </div>
+                    </div>
                     <!-- AI Insight Card -->
                     <div class="glass-card" style="margin-bottom: 2rem; background: linear-gradient(135deg, var(--bg-card), var(--primary-light)); border-left: 4px solid var(--primary-color);">
                         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
@@ -275,18 +286,7 @@
                         </div>
                     </div>
                     
-                    <!-- Filter Laporan Keuangan -->
-                    <div class="glass-card" style="margin-bottom: 2rem; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">Filter Laporan Keuangan</h3>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <span style="font-weight: 500; color: var(--text-muted);">Bulan/Tahun:</span>
-                            <select id="global-month-filter" onchange="fetchReportData()" class="form-control" style="width: 200px; padding: 0.5rem; border-radius: 8px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
-                                <option value="">Memuat filter...</option>
-                            </select>
-                            <button onclick="fetchReportData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
-                        </div>
-                    </div>
-                    
+
                     <!-- Rekapan Jago Report Section -->
                     <div class="glass-card" style="margin-bottom: 2rem; display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
