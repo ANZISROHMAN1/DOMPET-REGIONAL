@@ -200,9 +200,9 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Tanggal</th>
-                                    <th>Keterangan</th>
-                                    <th>Nominal</th>
+                                    <th>Unit</th>
+                                    <th>Nama</th>
+                                    <th>Bank & Rekening</th>
                                     <th>Status</th>
                                     <th>Bukti</th>
                                     <th>Aksi</th>
@@ -1133,15 +1133,18 @@
             let html = '';
             data.forEach((item, index) => {
                 let id = getColValue(item, ['id', 'no']) || (index + 1);
-                let dateStr = getColValue(item, ['tanggal', 'bulan', 'periode']);
-                if (typeof dateStr === 'string') dateStr = dateStr.split('T')[0];
                 
-                let keterangan = getColValue(item, ['nama', 'keterangan', 'deskripsi', 'unit', 'kegiatan']);
-                let nominal = getColValue(item, ['nominal', 'jumlah', 'total', 'biaya', 'amount']);
-                let status = String(getColValue(item, ['status'])).trim() || 'Belum Dibayar';
-                let buktiPath = getColValue(item, ['bukti', 'transfer', 'tf', 'link']);
+                let unit = getColValue(item, ['unit']);
+                let nama = getColValue(item, ['nama']);
+                let bank = getColValue(item, ['bank']);
+                let rekening = getColValue(item, ['rekening', 'rek']);
                 
-                let isDibayar = status.toLowerCase().includes('dibayar') || status.toLowerCase().includes('selesai') || status.toLowerCase().includes('approved');
+                let status = String(getColValue(item, ['status', 'keterangan_status'])).trim();
+                if (!status) status = 'Belum Dibayar';
+                let buktiPath = getColValue(item, ['bukti', 'transfer', 'tf', 'link', 'nota']);
+                
+                let sLow = status.toLowerCase();
+                let isDibayar = sLow === 'dibayar' || sLow === 'selesai' || sLow === 'approved' || sLow === 'lunas' || sLow === 'paid';
                 
                 let actionHtml = '';
                 if (!isDibayar) {
@@ -1160,9 +1163,12 @@
                 html += `
                 <tr>
                     <td>#${id}</td>
-                    <td>${dateStr}</td>
-                    <td style="font-weight: 500;">${keterangan}</td>
-                    <td style="font-weight: 600;">${formatRupiah(nominal)}</td>
+                    <td style="font-weight: 500;">${unit || '-'}</td>
+                    <td style="font-weight: 500;">${nama || '-'}</td>
+                    <td>
+                        <div style="font-weight: 500;">${bank || '-'}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">${rekening || '-'}</div>
+                    </td>
                     <td><span class="status-badge ${isDibayar ? 'status-approved' : 'status-pending'}">${status}</span></td>
                     <td>${buktiHtml}</td>
                     <td>${actionHtml}</td>
