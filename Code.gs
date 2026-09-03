@@ -524,6 +524,18 @@ function processParsedJagoData(transactions) {
       continue; // Lewati transaksi sebelum 30 Juli 2026
     }
     
+    // Format tanggal menjadi dd/MM/yyyy
+    var dd = String(transDate.getDate()).padStart(2, '0');
+    var mm = String(transDate.getMonth() + 1).padStart(2, '0');
+    var yyyy = transDate.getFullYear();
+    var formattedDate = dd + '/' + mm + '/' + yyyy;
+    
+    // Extract time if exists in original string to append it (optional, but good to preserve)
+    var timeMatch = dateStr.match(/\d{2}:\d{2}/);
+    if (timeMatch) {
+      formattedDate += ' ' + timeMatch[0];
+    }
+    
     // Pastikan baris ini adalah transaksi asli (harus punya ID#)
     if (!trx[1].includes("ID#") && !trx[2].includes("ID#")) {
       continue; // Abaikan header tabel
@@ -567,7 +579,7 @@ function processParsedJagoData(transactions) {
     var autoKategori = guessKategori(trx[1] + " " + trx[2], notes);
     
     newRows.push([
-      trx[0], // Date & Time
+      formattedDate, // Date & Time dengan format dd/MM/yyyy HH:mm
       trx[1], // Source/Dest
       trx[2], // Details
       notes,  // Corrected Notes
