@@ -220,9 +220,20 @@ function doGet(e) {
     var data = tagihanSheet.getDataRange().getValues();
     if (data.length < 2) return ContentService.createTextOutput(JSON.stringify({success: true, data: []})).setMimeType(ContentService.MimeType.JSON);
     
-    var headers = data[0];
+    var headerRowIndex = 0;
+    for (var i = 0; i < Math.min(5, data.length); i++) {
+      if (String(data[i][0]).trim() !== '' || String(data[i][1]).trim() !== '') {
+        headerRowIndex = i;
+        break;
+      }
+    }
+    
+    var headers = data[headerRowIndex];
     var rows = [];
-    for (var i = 1; i < data.length; i++) {
+    for (var i = headerRowIndex + 1; i < data.length; i++) {
+      // Skip empty rows
+      if (String(data[i][0]).trim() === '' && String(data[i][1]).trim() === '') continue;
+      
       var row = {};
       for (var j = 0; j < headers.length; j++) {
         var headerName = String(headers[j]).trim();
@@ -335,13 +346,32 @@ function doPost(e) {
         fileUrl = file.getUrl();
       }
       
-      var headers = sheetTagihan.getRange(1, 1, 1, sheetTagihan.getLastColumn()).getValues()[0];
+      var allData = sheetTagihan.getDataRange().getValues();
+      var headerRowIndex = 0;
+      for (var i = 0; i < Math.min(5, allData.length); i++) {
+        if (String(allData[i][0]).trim() !== '' || String(allData[i][1]).trim() !== '') {
+          headerRowIndex = i;
+          break;
+        }
+      }
+      
+      var headers = allData[headerRowIndex];
       var statusCol = -1;
       var buktiCol = -1;
       for (var i = 0; i < headers.length; i++) {
         var h = String(headers[i]).toLowerCase();
         if (h.includes('status')) statusCol = i + 1;
         if (h.includes('bukti') || h.includes('transfer') || h.includes('tf')) buktiCol = i + 1;
+      }
+      
+      // Jika kolom status dan bukti belum ada, tambahkan di sebelah kanan
+      if (statusCol === -1) {
+        statusCol = sheetTagihan.getLastColumn() + 1;
+        sheetTagihan.getRange(headerRowIndex + 1, statusCol).setValue('Status');
+      }
+      if (buktiCol === -1) {
+        buktiCol = statusCol + 1;
+        sheetTagihan.getRange(headerRowIndex + 1, buktiCol).setValue('Bukti TF');
       }
       
       if (statusCol > 0) sheetTagihan.getRange(rowIndex, statusCol).setValue('Dibayar');
