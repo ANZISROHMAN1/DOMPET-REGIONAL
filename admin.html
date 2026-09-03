@@ -1191,30 +1191,6 @@
                 const result = await response.json();
                 
                 if (result.success && result.data) {
-                    // Update global dropdown filter if it hasn't been populated
-                    if (result.months && filterMonth) {
-                        const currentVal = filterMonth.value || result.currentMonth;
-                        filterMonth.innerHTML = '';
-                        result.months.forEach(m => {
-                            const option = document.createElement('option');
-                            option.value = m === 'Semua Bulan' ? '' : m;
-                            option.textContent = m;
-                            if (currentVal === option.value || currentVal === m) option.selected = true;
-                            filterMonth.appendChild(option);
-                        });
-                    }
-                    if (result.years && filterYear) {
-                        const currentVal = filterYear.value || result.currentYear;
-                        filterYear.innerHTML = '';
-                        result.years.forEach(y => {
-                            const option = document.createElement('option');
-                            option.value = y === 'Semua Tahun' ? '' : y;
-                            option.textContent = y;
-                            if (currentVal === option.value || currentVal === y) option.selected = true;
-                            filterYear.appendChild(option);
-                        });
-                    }
-                    
                     renderNeracaTable(result.data);
                 } else {
                     console.error('Failed to fetch Neraca data:', result.message);
