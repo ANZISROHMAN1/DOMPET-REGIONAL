@@ -56,6 +56,7 @@ function doGet(e) {
     
     var CUTOFF_DATE = new Date(2026, 6, 30);
     var filterMonth = e.parameter.month;
+    var filterYear = e.parameter.year;
     
     function parseDateSafe(val) {
       if (!val) return null;
@@ -80,14 +81,19 @@ function doGet(e) {
     var trendData = {};
     var tagihanRutin = [];
     var monthsSet = {};
+    var yearsSet = {};
     
     for (var k = 1; k < jagoData.length; k++) {
       var rowDate = parseDateSafe(jagoData[k][0]);
       if (!rowDate || rowDate < CUTOFF_DATE) continue;
       
-      var monthYear = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), "MMMM yyyy");
-      monthYear = monthYear.replace('January', 'Januari').replace('February', 'Februari').replace('March', 'Maret').replace('May', 'Mei').replace('June', 'Juni').replace('July', 'Juli').replace('August', 'Agustus').replace('October', 'Oktober').replace('December', 'Desember');
-      monthsSet[monthYear] = true;
+      var rowMonthOnly = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), "MMMM");
+      rowMonthOnly = rowMonthOnly.replace('January', 'Januari').replace('February', 'Februari').replace('March', 'Maret').replace('May', 'Mei').replace('June', 'Juni').replace('July', 'Juli').replace('August', 'Agustus').replace('October', 'Oktober').replace('December', 'Desember');
+      var rowYearOnly = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), "yyyy");
+      
+      var monthYear = rowMonthOnly + " " + rowYearOnly;
+      monthsSet[rowMonthOnly] = true;
+      yearsSet[rowYearOnly] = true;
       
       var amount = parseFloat(jagoData[k][4]) || 0;
       var unit = jagoData[k][6] || 'Tanpa Unit';
@@ -101,7 +107,10 @@ function doGet(e) {
       if (amount < 0) trendData[monthYear].expense += Math.abs(amount);
       
       if (filterMonth && filterMonth !== "Semua Bulan") {
-          if (monthYear !== filterMonth) continue;
+          if (rowMonthOnly !== filterMonth) continue;
+      }
+      if (filterYear && filterYear !== "Semua Tahun") {
+          if (rowYearOnly !== filterYear) continue;
       }
       
       if (amount < 0) { // Only count expenses for summaries
@@ -141,7 +150,9 @@ function doGet(e) {
     }
     
     var availableMonths = ["Semua Bulan"].concat(Object.keys(monthsSet));
+    var availableYears = ["Semua Tahun"].concat(Object.keys(yearsSet));
     var currentMonth = filterMonth || "Semua Bulan";
+    var currentYear = filterYear || "Semua Tahun";
     
     return ContentService.createTextOutput(JSON.stringify({
         success: true, 
@@ -150,7 +161,9 @@ function doGet(e) {
         trendData: resultTrend,
         tagihanRutin: tagihanRutin,
         months: availableMonths,
-        currentMonth: currentMonth
+        years: availableYears,
+        currentMonth: currentMonth,
+        currentYear: currentYear
     })).setMimeType(ContentService.MimeType.JSON);
   } else if (action === 'neraca_data') {
     var neracaSheet = ss.getSheetByName('NERACA KEUANGAN WEB');

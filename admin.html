@@ -202,12 +202,14 @@
                 <div id="report-view" style="display: none;">
                     
                     <!-- Filter Laporan Keuangan -->
-                    <div class="glass-card" style="margin-bottom: 2rem; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="glass-card" style="margin-bottom: 2rem; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                         <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">Filter Laporan Keuangan</h3>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <span style="font-weight: 500; color: var(--text-muted);">Bulan/Tahun:</span>
-                            <select id="global-month-filter" onchange="fetchReportData()" class="form-control" style="width: 200px; padding: 0.5rem; border-radius: 8px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
-                                <option value="">Memuat filter...</option>
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <select id="global-month-filter" onchange="fetchReportData()" class="form-control" style="width: 150px; padding: 0.5rem; border-radius: 8px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
+                                <option value="">Bulan...</option>
+                            </select>
+                            <select id="global-year-filter" onchange="fetchReportData()" class="form-control" style="width: 120px; padding: 0.5rem; border-radius: 8px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);">
+                                <option value="">Tahun...</option>
                             </select>
                             <button onclick="fetchReportData()" class="btn btn-sm" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);"><i class="ri-refresh-line"></i> Refresh</button>
                         </div>
@@ -701,26 +703,40 @@
         
         async function fetchJagoData() {
             try {
-                const filterSelect = document.getElementById('global-month-filter');
-                let monthParam = '';
-                if (filterSelect && filterSelect.value) {
-                    monthParam = `&month=${encodeURIComponent(filterSelect.value)}`;
+                const filterMonth = document.getElementById('global-month-filter');
+                const filterYear = document.getElementById('global-year-filter');
+                let queryParam = '';
+                if (filterMonth && filterMonth.value) {
+                    queryParam += `&month=${encodeURIComponent(filterMonth.value)}`;
+                }
+                if (filterYear && filterYear.value) {
+                    queryParam += `&year=${encodeURIComponent(filterYear.value)}`;
                 }
                 
-                const response = await fetch(SCRIPT_URL + '?action=jago_data' + monthParam);
+                const response = await fetch(SCRIPT_URL + '?action=jago_data' + queryParam);
                 const result = await response.json();
                 
                 if (result.success && result.data) {
-                    // Update global dropdown filter if it hasn't been populated
-                    if (result.months && result.months.length > 0 && filterSelect) {
-                        const currentVal = filterSelect.value || result.currentMonth;
-                        filterSelect.innerHTML = '';
+                    if (result.months && filterMonth) {
+                        const currentVal = filterMonth.value || result.currentMonth;
+                        filterMonth.innerHTML = '';
                         result.months.forEach(m => {
                             const option = document.createElement('option');
                             option.value = m === 'Semua Bulan' ? '' : m;
                             option.textContent = m;
                             if (currentVal === option.value || currentVal === m) option.selected = true;
-                            filterSelect.appendChild(option);
+                            filterMonth.appendChild(option);
+                        });
+                    }
+                    if (result.years && filterYear) {
+                        const currentVal = filterYear.value || result.currentYear;
+                        filterYear.innerHTML = '';
+                        result.years.forEach(y => {
+                            const option = document.createElement('option');
+                            option.value = y === 'Semua Tahun' ? '' : y;
+                            option.textContent = y;
+                            if (currentVal === option.value || currentVal === y) option.selected = true;
+                            filterYear.appendChild(option);
                         });
                     }
                     
@@ -1154,26 +1170,48 @@
 
         async function fetchNeracaData() {
             try {
-                const filterSelect = document.getElementById('global-month-filter');
-                let monthParam = '';
-                if (filterSelect && filterSelect.value) {
-                    monthParam = `&month=${encodeURIComponent(filterSelect.value)}`;
+                const filterMonth = document.getElementById('global-month-filter');
+                const filterYear = document.getElementById('global-year-filter');
+                
+                let monthVal = filterMonth ? filterMonth.value : '';
+                let yearVal = filterYear ? filterYear.value : '';
+                let combinedMonth = "Semua Bulan";
+                
+                if (monthVal && monthVal !== "Semua Bulan") {
+                    if (yearVal && yearVal !== "Semua Tahun") {
+                        combinedMonth = monthVal + " " + yearVal;
+                    } else {
+                        combinedMonth = monthVal;
+                    }
                 }
+                
+                let monthParam = `&month=${encodeURIComponent(combinedMonth)}`;
                 
                 const response = await fetch(`${SCRIPT_URL}?action=neraca_data${monthParam}`);
                 const result = await response.json();
                 
                 if (result.success && result.data) {
                     // Update global dropdown filter if it hasn't been populated
-                    if (result.months && result.months.length > 0 && filterSelect) {
-                        const currentVal = filterSelect.value || result.currentMonth;
-                        filterSelect.innerHTML = '';
+                    if (result.months && filterMonth) {
+                        const currentVal = filterMonth.value || result.currentMonth;
+                        filterMonth.innerHTML = '';
                         result.months.forEach(m => {
                             const option = document.createElement('option');
                             option.value = m === 'Semua Bulan' ? '' : m;
                             option.textContent = m;
                             if (currentVal === option.value || currentVal === m) option.selected = true;
-                            filterSelect.appendChild(option);
+                            filterMonth.appendChild(option);
+                        });
+                    }
+                    if (result.years && filterYear) {
+                        const currentVal = filterYear.value || result.currentYear;
+                        filterYear.innerHTML = '';
+                        result.years.forEach(y => {
+                            const option = document.createElement('option');
+                            option.value = y === 'Semua Tahun' ? '' : y;
+                            option.textContent = y;
+                            if (currentVal === option.value || currentVal === y) option.selected = true;
+                            filterYear.appendChild(option);
                         });
                     }
                     
