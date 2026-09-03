@@ -300,28 +300,11 @@
                     </div>
                     
                     <!-- Kategori & Tagihan Rutin Section -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 2rem; margin-bottom: 2rem; max-width: 800px; margin-left: auto; margin-right: auto;">
                         <div class="glass-card">
                             <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Pengeluaran per Kategori</h2>
                             <div style="position: relative; height: 250px;">
                                 <canvas id="kategoriPieChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="glass-card" style="display: flex; flex-direction: column;">
-                            <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Tagihan Rutin Bulanan</h2>
-                            <div class="table-container" style="flex: 1; max-height: 250px; overflow-y: auto;">
-                                <table class="modern-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Tanggal</th>
-                                            <th>Deskripsi</th>
-                                            <th>Nominal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tagihan-rutin-body">
-                                        <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Memuat data...</td></tr>
-                                    </tbody>
-                                </table>
                             </div>
                         </div>
                     </div>
@@ -359,7 +342,7 @@
 
     <script>
         // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzwk73H8KyCLD74jYqvG3bHP1FhEGHeztqB6HoL1E0MTUWLOfs-IYtb7COhEps1Nkj8sQ/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyovB0wejLkS5X-myKk2S3RnwIyYXP8OullzPz4thpdekbqvQTHzA3zaSENY1jeSO0F/exec';
         
         function switchTab(tabId) {
             document.getElementById('nav-dashboard').classList.remove('active');
@@ -650,6 +633,11 @@
             }
             
             if (labels.length > 0) {
+                const totalAmt = amounts.reduce((a, b) => a + b, 0);
+                const labelsWithPct = labels.map((l, i) => {
+                    const pct = totalAmt > 0 ? ((amounts[i] / totalAmt) * 100).toFixed(1) : 0;
+                    return `${l} (${pct}%)`;
+                });
                 const bgColors = [
                     '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', 
                     '#ef4444', '#14b8a6', '#f43f5e', '#84cc16', '#0ea5e9',
@@ -660,7 +648,7 @@
                 unitChart = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: labels,
+                        labels: labelsWithPct,
                         datasets: [{
                             data: amounts,
                             backgroundColor: bgColors.slice(0, labels.length),
@@ -745,7 +733,6 @@
                     
                     if (result.categoryData) renderCategoryPieChart(result.categoryData);
                     if (result.trendData) renderTrendChart(result.trendData);
-                    if (result.tagihanRutin) renderTagihanRutin(result.tagihanRutin);
                     
                     generateAIInsight(result);
                 } else {
@@ -805,6 +792,11 @@
             }
             
             if (labels.length > 0) {
+                const totalAmt = amounts.reduce((a, b) => a + b, 0);
+                const labelsWithPct = labels.map((l, i) => {
+                    const pct = totalAmt > 0 ? ((amounts[i] / totalAmt) * 100).toFixed(1) : 0;
+                    return `${l} (${pct}%)`;
+                });
                 const bgColors = [
                     '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', 
                     '#ef4444', '#14b8a6', '#f43f5e', '#84cc16', '#0ea5e9',
@@ -814,7 +806,7 @@
                 unitChart = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: labels,
+                        labels: labelsWithPct,
                         datasets: [{
                             data: amounts,
                             backgroundColor: bgColors.slice(0, labels.length),
@@ -861,11 +853,16 @@
             const amounts = categoryData.map(d => d.total);
             
             if (labels.length > 0) {
+                const totalAmt = amounts.reduce((a, b) => a + b, 0);
+                const labelsWithPct = labels.map((l, i) => {
+                    const pct = totalAmt > 0 ? ((amounts[i] / totalAmt) * 100).toFixed(1) : 0;
+                    return `${l} (${pct}%)`;
+                });
                 const bgColors = ['#f43f5e', '#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#64748b', '#d946ef'];
                 kategoriChartObj = new Chart(ctx, {
                     type: 'pie',
                     data: {
-                        labels: labels,
+                        labels: labelsWithPct,
                         datasets: [{ data: amounts, backgroundColor: bgColors.slice(0, labels.length), borderWidth: 0 }]
                     },
                     options: {
@@ -908,25 +905,7 @@
             });
         }
         
-        function renderTagihanRutin(tagihanRutin) {
-            const tbody = document.getElementById('tagihan-rutin-body');
-            if (!tbody) return;
-            if (tagihanRutin.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Tidak ada tagihan rutin pada bulan ini.</td></tr>`;
-                return;
-            }
-            
-            let html = '';
-            tagihanRutin.forEach(t => {
-                html += `<tr>
-                    <td style="font-size: 0.85rem; color: var(--text-muted);">${t.date}</td>
-                    <td><div style="font-weight: 500;">${t.kategori}</div><div style="font-size: 0.85rem; color: var(--text-muted);">${t.details.substring(0,40)}</div></td>
-                    <td style="font-weight: 600; color: var(--danger-color);">${formatRupiah(t.amount)}</td>
-                </tr>`;
-            });
-            tbody.innerHTML = html;
-        }
-        
+
         function generateAIInsight(result) {
             const insightText = document.getElementById('ai-insight-text');
             if (!insightText) return;
