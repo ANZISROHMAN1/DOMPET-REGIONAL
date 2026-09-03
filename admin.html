@@ -341,6 +341,30 @@
     <!-- Hidden form for TF upload -->
     <input type="file" id="tf-upload-input" accept="image/*,.pdf" style="display: none;">
 
+    <!-- Unit Details Modal -->
+    <div class="overlay" id="unit-details-modal">
+        <div class="modal" style="max-width: 700px; width: 95%;">
+            <div class="modal-header">
+                <h3 id="unit-details-title">Detail Pengajuan</h3>
+                <button type="button" class="close-btn" onclick="closeUnitDetails()"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                <table class="modern-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Kategori</th>
+                            <th>Keterangan</th>
+                            <th>Nominal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="unit-details-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script>
         // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyovB0wejLkS5X-myKk2S3RnwIyYXP8OullzPz4thpdekbqvQTHzA3zaSENY1jeSO0F/exec';
@@ -760,7 +784,7 @@
                 totalCount += item.count;
                 
                 html += `
-                    <tr>
+                    <tr onclick='showUnitDetails(${JSON.stringify(item.transactions).replace(/'/g, "&apos;")}, "${item.unit}")' style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--border-color)'" onmouseout="this.style.backgroundColor=''">
                         <td style="font-weight: 500;">${item.unit}</td>
                         <td>${item.count} Pengajuan</td>
                         <td style="font-weight: 600; color: var(--success-color);">${formatRupiah(item.total)}</td>
@@ -842,6 +866,29 @@
                     }
                 });
             }
+        }
+        
+        function showUnitDetails(transactions, unitName) {
+            document.getElementById('unit-details-title').innerText = 'Detail Pengajuan: ' + unitName;
+            const tbody = document.getElementById('unit-details-body');
+            
+            if (!transactions || transactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1rem;">Tidak ada data</td></tr>';
+            } else {
+                tbody.innerHTML = transactions.map(t => `
+                    <tr>
+                        <td style="white-space: nowrap;">${t.date}</td>
+                        <td><span class="status-badge" style="background: var(--bg-main); color: var(--text-color);">${t.kategori}</span></td>
+                        <td>${t.details}</td>
+                        <td style="font-weight: 600; color: var(--success-color);">${formatRupiah(t.amount)}</td>
+                    </tr>
+                `).join('');
+            }
+            document.getElementById('unit-details-modal').style.display = 'flex';
+        }
+
+        function closeUnitDetails() {
+            document.getElementById('unit-details-modal').style.display = 'none';
         }
         
         function renderCategoryPieChart(categoryData) {

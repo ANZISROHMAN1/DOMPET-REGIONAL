@@ -117,9 +117,15 @@ function doGet(e) {
         var absAmount = Math.abs(amount);
         
         // Unit summary
-        if (!summaryData[unit]) summaryData[unit] = { count: 0, total: 0 };
+        if (!summaryData[unit]) summaryData[unit] = { count: 0, total: 0, transactions: [] };
         summaryData[unit].count += 1;
         summaryData[unit].total += absAmount;
+        summaryData[unit].transactions.push({
+            date: Utilities.formatDate(rowDate, Session.getScriptTimeZone(), "dd MMM yyyy"),
+            details: details + (notes ? ' - ' + notes : ''),
+            amount: absAmount,
+            kategori: kategori
+        });
         
         // Category summary
         if (!categorySummary[kategori]) categorySummary[kategori] = { count: 0, total: 0 };
@@ -136,7 +142,7 @@ function doGet(e) {
     
     var resultData = [];
     for (var u in summaryData) {
-      resultData.push({ unit: u, count: summaryData[u].count, total: summaryData[u].total });
+      resultData.push({ unit: u, count: summaryData[u].count, total: summaryData[u].total, transactions: summaryData[u].transactions });
     }
     
     var resultCategory = [];
