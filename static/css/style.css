@@ -32,8 +32,8 @@
     --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
     
     --nav-hover: #1e293b;
-    --nav-active: rgba(211, 47, 47, 0.15);
-    --nav-active-border: #d32f2f;
+    --nav-active: rgba(30, 58, 138, 0.2);
+    --nav-active-border: var(--secondary-color);
     --text-input: #f8fafc;
     --icon-color: #94a3b8;
     
@@ -57,8 +57,8 @@
     --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
     
     --nav-hover: #f1f5f9;
-    --nav-active: rgba(211, 47, 47, 0.08);
-    --nav-active-border: #d32f2f;
+    --nav-active: rgba(30, 58, 138, 0.1);
+    --nav-active-border: var(--secondary-color);
     --text-input: #0f172a;
     --icon-color: #64748b;
 }
@@ -173,7 +173,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-links a.active i {
-    color: var(--primary-color);
+    color: var(--secondary-color);
 }
 
 /* Main Content */
