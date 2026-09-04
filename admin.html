@@ -359,7 +359,7 @@
     </div>
 
     <!-- Hidden form for TF upload -->
-    <input type="file" id="tf-upload-input" accept="image/*,.pdf" style="display: none;">
+
 
     <!-- Unit Details Modal -->
     <div class="overlay" id="unit-details-modal">
@@ -979,7 +979,7 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: {
-                        y: { ticks: { callback: function(val) { return 'Rp ' + (val/1000000) + 'M'; } } }
+                        y: { ticks: { callback: function(val) { return 'Rp ' + (val/1000000) + ' Juta'; } } }
                     },
                     plugins: { tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + formatRupiah(c.parsed.y); } } } }
                 }
@@ -1087,7 +1087,7 @@
                             ticks: {
                                 color: document.documentElement.getAttribute('data-theme') === 'light' ? '#6b7280' : '#9ca3af',
                                 callback: function(value) {
-                                    if (value >= 1000000) return 'Rp ' + (value/1000000) + 'M';
+                                    if (value >= 1000000) return 'Rp ' + (value/1000000) + ' Juta';
                                     if (value >= 1000) return 'Rp ' + (value/1000) + 'k';
                                     return 'Rp ' + value;
                                 }
@@ -1148,7 +1148,7 @@
                 
                 let actionHtml = '';
                 if (!isDibayar) {
-                    actionHtml = `<button onclick="triggerUploadBukti(${item.row_index})" class="btn btn-sm btn-success" title="Upload Bukti Transfer"><i class="ri-upload-cloud-line"></i> Upload Bukti</button>`;
+                    actionHtml = `<button onclick="triggerDoneTf(${item.row_index})" class="btn btn-sm btn-success" title="Tandai Sudah Transfer"><i class="ri-check-double-line"></i> Done TF</button>`;
                 } else {
                     actionHtml = `<span style="color: var(--success-color); font-weight: 600;"><i class="ri-check-line"></i> Selesai</span>`;
                 }
@@ -1178,38 +1178,14 @@
             tbody.innerHTML = html;
         }
 
-        function triggerUploadBukti(rowIndex) {
-            pendingUpdateRowId = rowIndex;
-            document.getElementById('tf-upload-input').click();
-        }
-
-        document.getElementById('tf-upload-input').addEventListener('change', function(e) {
-            if (this.files && this.files[0]) {
-                if (confirm('Kirim bukti transfer dan tandai tagihan ini selesai?')) {
-                    processUpdateTagihan(this.files[0]);
-                }
-                this.value = ''; // reset
-            }
-        });
-
-        async function processUpdateTagihan(file) {
-            const payload = {
-                action: 'upload_bukti_tagihan',
-                row_index: pendingUpdateRowId
-            };
-            
-            showAlert('Mengunggah bukti transfer...', 'success');
-            
-            if (file) {
-                payload.fileName = file.name;
-                payload.mimeType = file.type;
-                
-                const reader = new FileReader();
-                reader.onload = async function() {
-                    payload.fileData = reader.result;
-                    sendUpdatePayload(payload);
+        function triggerDoneTf(rowIndex) {
+            if (confirm('Tandai tagihan ini selesai/sudah ditransfer?')) {
+                const payload = {
+                    action: 'upload_bukti_tagihan', // Backend handles empty files and updates status
+                    row_index: rowIndex
                 };
-                reader.readAsDataURL(file);
+                showAlert('Memproses tagihan...', 'success');
+                sendUpdatePayload(payload);
             }
         }
 
