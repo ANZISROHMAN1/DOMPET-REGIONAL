@@ -1,15 +1,30 @@
-function getNeracaDebug() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('REKAPAN JAGO');
-  var data = sheet.getDataRange().getValues();
-  var log = [];
-  var totalPengeluaran = 0;
-  for (var i = 1; i < data.length; i++) {
-    var amt = parseFloat(data[i][4]) || 0;
-    var unit = data[i][6];
-    if (amt < -10000000 || amt > 10000000) {
-       log.push("Row " + (i+1) + ": " + amt + " | Unit: " + unit + " | Detail: " + data[i][2] + " | Notes: " + data[i][3]);
+const code = require('fs').readFileSync('Code.gs', 'utf8');
+
+const ContentService = {
+  createTextOutput: (str) => ({
+    setMimeType: () => str
+  }),
+  MimeType: { JSON: 'JSON' }
+};
+
+let outputLog = "";
+
+const SpreadsheetApp = {
+  getActiveSpreadsheet: () => ({
+    getSheetByName: (name) => {
+      if (name === 'REKAPAN JAGO WEB') {
+        return {
+          getDataRange: () => ({
+            getValues: () => {
+              // I can't read the actual google sheet from local Node.js.
+              // We need to run this on Apps Script.
+              return [];
+            }
+          })
+        };
+      }
+      return null;
     }
-    if (amt < 0) totalPengeluaran += Math.abs(amt);
-  }
-  return {log: log, totalPengeluaran: totalPengeluaran};
-}
+  })
+};
+

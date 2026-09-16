@@ -79,47 +79,47 @@
                     <div id="result-container" style="display: none; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
                         <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; color: var(--text-main);">Hasil Pencarian (ID: <span id="res-id"></span>)</h3>
                         
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div class="result-grid">
                             <div>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Nama Pengaju</p>
-                                <p style="font-weight: 500;" id="res-nama"></p>
+                                <p class="label-text">Nama Pengaju</p>
+                                <p class="value-text" id="res-nama"></p>
                             </div>
                             <div>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Tanggal</p>
-                                <p style="font-weight: 500;" id="res-tanggal"></p>
+                                <p class="label-text">Tanggal</p>
+                                <p class="value-text" id="res-tanggal"></p>
                             </div>
                             <div>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Unit</p>
-                                <p style="font-weight: 500;" id="res-unit"></p>
+                                <p class="label-text">Unit</p>
+                                <p class="value-text" id="res-unit"></p>
                             </div>
                             <div>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Sub Unit</p>
-                                <p style="font-weight: 500;" id="res-sub-unit"></p>
+                                <p class="label-text">Sub Unit</p>
+                                <p class="value-text" id="res-sub-unit"></p>
                             </div>
                             <div>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Kegiatan</p>
-                                <p style="font-weight: 500;" id="res-kegiatan"></p>
+                                <p class="label-text">Kegiatan</p>
+                                <p class="value-text" id="res-kegiatan"></p>
                             </div>
                             <div>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Nominal</p>
-                                <p style="font-weight: 600; color: var(--primary-color);" id="res-nominal"></p>
+                                <p class="label-text">Nominal</p>
+                                <p class="value-text nominal-text" id="res-nominal"></p>
                             </div>
                         </div>
 
-                        <div style="background: var(--bg-input); padding: 1.5rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
-                            <div>
+                        <div class="status-container">
+                            <div class="status-box-left">
                                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Status Saat Ini</p>
                                 <span id="res-status-badge" class="status-badge" style="font-size: 1rem;"></span>
                             </div>
                             
-                            <div id="res-tf-container" style="text-align: right; display: none;">
+                            <div id="res-tf-container" class="status-box-right" style="display: none;">
                                 <p style="font-size: 0.85rem; color: var(--success-color); margin-bottom: 0.5rem;">Dana telah ditransfer!</p>
-                                <a href="#" id="res-tf-link" target="_blank" class="btn btn-sm" style="background: var(--success-light); color: var(--success-color); border: 1px solid var(--success-color);">
+                                <a href="#" id="res-tf-link" target="_blank" class="btn btn-sm btn-success-outline">
                                     <i class="ri-check-double-line"></i> Lihat Bukti Transfer
                                 </a>
                             </div>
                             
-                            <div id="res-pending-container" style="text-align: right; color: var(--text-muted); font-size: 0.9rem; display: none;">
+                            <div id="res-pending-container" class="status-box-right text-muted-status" style="display: none;">
                                 <i class="ri-time-line"></i> Sedang diproses...
                             </div>
                         </div>
