@@ -294,6 +294,9 @@ function doGet(e) {
     }
     rows.reverse(); // newest first
     return ContentService.createTextOutput(JSON.stringify({success: true, data: rows})).setMimeType(ContentService.MimeType.JSON);
+  } else if (action === 'get_planning') {
+    var plans = getPlanningData();
+    return ContentService.createTextOutput(JSON.stringify({ success: true, data: plans })).setMimeType(ContentService.MimeType.JSON);
   }
   return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Action not found'})).setMimeType(ContentService.MimeType.JSON);
 }
@@ -354,10 +357,7 @@ function doPost(e) {
         var jagoHeaders = [];
         if (lastColJago > 0) {
           jagoHeaders = sheetJago.getRange(1, 1, 1, lastColJago).getValues()[0];
-        } else if (action === 'get_planning') {
-    var plans = getPlanningData();
-    return ContentService.createTextOutput(JSON.stringify({ success: true, data: plans })).setMimeType(ContentService.MimeType.JSON);
-  } else {
+        } else {
           jagoHeaders = ['Date & Time', 'Source/Destination', 'Transaction Details', 'Notes', 'Kas Masuk', 'Kas Keluar', 'Saldo', 'Unit', 'Kategori'];
         }
         
@@ -456,6 +456,27 @@ function doPost(e) {
       if (buktiCol > 0 && fileUrl) sheetTagihan.getRange(rowIndex, buktiCol).setValue(fileUrl);
       
       return ContentService.createTextOutput(JSON.stringify({success: true, fileUrl: fileUrl})).setMimeType(ContentService.MimeType.JSON);
+    } else if (action === 'save_planning') {
+      var sheet = getOrCreatePlanningSheet();
+      var id = 'PLN-' + new Date().getTime();
+      sheet.appendRow([id, new Date(), requestData.planning, requestData.kategori, requestData.budget]);
+      return ContentService.createTextOutput(JSON.stringify({ success: true, message: 'Planning berhasil disimpan', id: id })).setMimeType(ContentService.MimeType.JSON);
+    } else if (action === 'delete_planning') {
+      var sheet = getOrCreatePlanningSheet();
+      var data = sheet.getDataRange().getValues();
+      var deleted = false;
+      for (var i = 1; i < data.length; i++) {
+        if (data[i][0] === requestData.id) {
+          sheet.deleteRow(i + 1);
+          deleted = true;
+          break;
+        }
+      }
+      if (deleted) {
+        return ContentService.createTextOutput(JSON.stringify({ success: true, message: 'Planning berhasil dihapus' })).setMimeType(ContentService.MimeType.JSON);
+      } else {
+        return ContentService.createTextOutput(JSON.stringify({ success: false, message: 'Planning tidak ditemukan' })).setMimeType(ContentService.MimeType.JSON);
+      }
     }
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({success: false, message: err.message})).setMimeType(ContentService.MimeType.JSON);
@@ -1394,28 +1415,7 @@ function calculateNeraca(jagoData, filterMonth) {
                   break;
               }
           }
-      } else if (action === 'save_planning') {
-      var sheet = getOrCreatePlanningSheet();
-      var id = 'PLN-' + new Date().getTime();
-      sheet.appendRow([id, new Date(), requestData.planning, requestData.kategori, requestData.budget]);
-      return ContentService.createTextOutput(JSON.stringify({ success: true, message: 'Planning berhasil disimpan', id: id })).setMimeType(ContentService.MimeType.JSON);
-    } else if (action === 'delete_planning') {
-      var sheet = getOrCreatePlanningSheet();
-      var data = sheet.getDataRange().getValues();
-      var deleted = false;
-      for (var i = 1; i < data.length; i++) {
-        if (data[i][0] === requestData.id) {
-          sheet.deleteRow(i + 1);
-          deleted = true;
-          break;
-        }
-      }
-      if (deleted) {
-        return ContentService.createTextOutput(JSON.stringify({ success: true, message: 'Planning berhasil dihapus' })).setMimeType(ContentService.MimeType.JSON);
       } else {
-        return ContentService.createTextOutput(JSON.stringify({ success: false, message: 'Planning tidak ditemukan' })).setMimeType(ContentService.MimeType.JSON);
-      }
-    } else {
           for (var i = 0; i < filteredData.length; i++) {
               if (filteredData[i][balColIdx] !== "" && filteredData[i][balColIdx] !== undefined) {
                   saldoAwal = parseSafeFloat(filteredData[i][balColIdx]) - trueAmounts[i];
@@ -1590,7 +1590,6 @@ function updateNeracaKeuangan() {
   neracaSheet.autoResizeColumns(1, 3);
 }
 
-
 // --- PLANNING SALDO FUNCTIONS ---
 function getOrCreatePlanningSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -1624,4 +1623,3 @@ function getPlanningData() {
   }
   return plans;
 }
-
