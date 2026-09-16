@@ -248,7 +248,68 @@
                             <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">AI Insight</h3>
                         </div>
                         <p id="ai-insight-text" style="color: var(--text-main); line-height: 1.5; margin: 0; font-size: 0.95rem;">Menganalisis data keuangan...</p>
+                    
+
+
+
+
+
+
+                    <!-- Planning Saldo Section -->
+                    <div class="glass-card" style="margin-bottom: 2rem;">
+                        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;"><i class="ri-pie-chart-2-line" style="color: var(--primary-color);"></i> Perencanaan Saldo</h2>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1.5rem;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Nama Planning</label>
+                                <input type="text" id="plan-name" class="form-control" placeholder="Contoh: Beli Laptop">
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Kategori</label>
+                                <input type="text" id="plan-kategori" list="kategori-list" class="form-control" placeholder="Contoh: Renov, TOP">
+                                <datalist id="kategori-list">
+                                    <option value="Renov">
+                                    <option value="TOP">
+                                    <option value="Lainnya">
+                                </datalist>
+                            </div>
+                            <div style="flex: 1; min-width: 200px;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Budget (Rp)</label>
+                                <input type="number" id="plan-budget" class="form-control" placeholder="Contoh: 15000000">
+                            </div>
+                            <div>
+                                <button onclick="submitPlanning()" id="btn-submit-plan" class="btn btn-primary"><i class="ri-add-line"></i> Tambah Planning</button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Planning</th>
+                                        <th>Kategori</th>
+                                        <th>Budget</th>
+                                        <th style="width: 80px;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="planning-body">
+                                    <tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="ri-loader-4-line ri-spin"></i> Memuat data planning...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;"><i class="ri-wallet-3-line" style="color: var(--primary-color);"></i> Rincian Saldo Akhir Berdasarkan Planning</h3>
+                            <div id="saldo-breakdown" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                                <!-- Will be filled by JS -->
+                            </div>
+                        </div>
                     </div>
+
+                    
+                    
+
+</div>
 
                     <!-- Overview Cards -->
                     <div class="dashboard-stats" style="margin-bottom: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
@@ -366,62 +427,6 @@
                         </div>
                     </div>
 
-
-
-
-                    <!-- Planning Saldo Section -->
-                    <div class="glass-card" style="margin-bottom: 2rem;">
-                        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;"><i class="ri-pie-chart-2-line" style="color: var(--primary-color);"></i> Perencanaan Saldo</h2>
-                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1.5rem;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Nama Planning</label>
-                                <input type="text" id="plan-name" class="form-control" placeholder="Contoh: Beli Laptop">
-                            </div>
-                            <div style="flex: 1; min-width: 150px;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Kategori</label>
-                                <input type="text" id="plan-kategori" list="kategori-list" class="form-control" placeholder="Contoh: Renov, TOP">
-                                <datalist id="kategori-list">
-                                    <option value="Renov">
-                                    <option value="TOP">
-                                    <option value="Lainnya">
-                                </datalist>
-                            </div>
-                            <div style="flex: 1; min-width: 200px;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Budget (Rp)</label>
-                                <input type="number" id="plan-budget" class="form-control" placeholder="Contoh: 15000000">
-                            </div>
-                            <div>
-                                <button onclick="submitPlanning()" id="btn-submit-plan" class="btn btn-primary"><i class="ri-add-line"></i> Tambah Planning</button>
-                            </div>
-                        </div>
-                        
-                        <div class="table-responsive">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Tanggal</th>
-                                        <th>Planning</th>
-                                        <th>Kategori</th>
-                                        <th>Budget</th>
-                                        <th style="width: 80px;">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="planning-body">
-                                    <tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="ri-loader-4-line ri-spin"></i> Memuat data planning...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
-                            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;"><i class="ri-wallet-3-line" style="color: var(--primary-color);"></i> Rincian Saldo Akhir Berdasarkan Planning</h3>
-                            <div id="saldo-breakdown" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
-                                <!-- Will be filled by JS -->
-                            </div>
-                        </div>
-                    </div>
-
-                    
-                    
 </div> <!-- End of report-view -->
 
             </div>
