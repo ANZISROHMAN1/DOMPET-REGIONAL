@@ -252,7 +252,14 @@
                     </div>
 
                     <!-- Overview Cards -->
-                    <div class="dashboard-stats" style="margin-bottom: 2rem;">
+                    <div class="dashboard-stats" style="margin-bottom: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;"><i class="ri-safe-line"></i></div>
+                            <div class="stat-details">
+                                <h3 id="stat-saldo-awal">Rp 0</h3>
+                                <p>Saldo Awal</p>
+                            </div>
+                        </div>
                         <div class="stat-card">
                             <div class="stat-icon green"><i class="ri-arrow-right-down-line"></i></div>
                             <div class="stat-details">
@@ -271,7 +278,7 @@
                             <div class="stat-icon blue"><i class="ri-wallet-3-line"></i></div>
                             <div class="stat-details">
                                 <h3 id="stat-sisa-saldo">Rp 0</h3>
-                                <p>Sisa Saldo</p>
+                                <p>Saldo Akhir</p>
                             </div>
                         </div>
                     </div>
@@ -1017,9 +1024,8 @@
             // Update Overview Cards
             document.getElementById('stat-kas-masuk').innerText = formatRupiah(totalIncome);
             document.getElementById('stat-kas-keluar').innerText = formatRupiah(totalExpense);
-            document.getElementById('stat-sisa-saldo').innerText = formatRupiah(totalIncome - totalExpense);
             
-            let insightMsg = `Pada periode <strong>${result.currentMonth}</strong>, tercatat kas masuk sebesar <strong>${formatRupiah(totalIncome)}</strong> dan kas keluar sebesar <strong>${formatRupiah(totalExpense)}</strong>. Sisa saldo operasional adalah <strong>${formatRupiah(totalIncome - totalExpense)}</strong>.<br>`;
+            let insightMsg = `Pada periode <strong>${result.currentMonth}</strong>, tercatat kas masuk sebesar <strong>${formatRupiah(totalIncome)}</strong> dan kas keluar sebesar <strong>${formatRupiah(totalExpense)}</strong>.<br>`;
             
             if (topUnit && topUnit.total > 0) {
                 insightMsg += `<br>• Pengeluaran terbesar dialokasikan untuk unit <strong>${topUnit.unit}</strong> senilai ${formatRupiah(topUnit.total)}. `;
@@ -1239,6 +1245,15 @@
                 
                 if (result.success && result.data) {
                     renderNeracaTable(result.data);
+                    
+                    let saldoAwal = 0;
+                    let saldoAkhir = 0;
+                    for (let i = 0; i < result.data.length; i++) {
+                        if (result.data[i][0] === "Saldo Awal") saldoAwal = result.data[i][1];
+                        if (result.data[i][0] === "SALDO AKHIR") saldoAkhir = result.data[i][1];
+                    }
+                    if (document.getElementById('stat-saldo-awal')) document.getElementById('stat-saldo-awal').innerText = formatRupiah(saldoAwal || 0);
+                    if (document.getElementById('stat-sisa-saldo')) document.getElementById('stat-sisa-saldo').innerText = formatRupiah(saldoAkhir || 0);
                 } else {
                     console.error('Failed to fetch Neraca data:', result.message);
                     document.getElementById('neraca-body').innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--danger-color);">Gagal memuat data neraca: ${result.message}</td></tr>`;
