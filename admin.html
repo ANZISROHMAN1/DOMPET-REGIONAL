@@ -274,11 +274,24 @@
                                 <p>Kas Keluar</p>
                             </div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-icon blue"><i class="ri-wallet-3-line"></i></div>
-                            <div class="stat-details">
-                                <h3 id="stat-sisa-saldo">Rp 0</h3>
-                                <p>Saldo Akhir</p>
+                        <div class="stat-card" style="padding: 0; display: flex; flex-direction: column; overflow: hidden; background: white; border: 1px solid var(--border-color); border-radius: 12px;">
+                            <div style="padding: 1rem; text-align: center; border-bottom: 1px solid var(--border-color); background: rgba(14, 165, 233, 0.05);">
+                                <p style="margin: 0 0 0.2rem 0; font-size: 0.85rem; color: var(--text-secondary);">Sisa Saldo</p>
+                                <h3 id="stat-sisa-saldo" style="margin: 0; font-size: 1.3rem; color: #0ea5e9; font-weight: 700;">Rp 0</h3>
+                            </div>
+                            <div style="padding: 0.7rem; text-align: center; border-bottom: 1px solid var(--border-color); background: rgba(16, 185, 129, 0.05);">
+                                <p style="margin: 0 0 0.2rem 0; font-size: 0.75rem; color: var(--text-secondary);">Saldo exclude TOP dan Renov</p>
+                                <h4 id="stat-saldo-exclude" style="margin: 0; font-size: 1rem; color: #10b981; font-weight: 700;">Rp 0</h4>
+                            </div>
+                            <div style="display: flex; background: rgba(245, 158, 11, 0.05);">
+                                <div style="flex: 1; padding: 0.7rem; text-align: center; border-right: 1px solid var(--border-color);">
+                                    <p style="margin: 0 0 0.2rem 0; font-size: 0.7rem; color: var(--text-secondary);">Saldo TOP</p>
+                                    <h4 id="stat-saldo-top" style="margin: 0; font-size: 0.95rem; color: #f59e0b; font-weight: 700;">Rp 0</h4>
+                                </div>
+                                <div style="flex: 1; padding: 0.7rem; text-align: center;">
+                                    <p style="margin: 0 0 0.2rem 0; font-size: 0.7rem; color: var(--text-secondary);">Saldo Renov</p>
+                                    <h4 id="stat-saldo-renov" style="margin: 0; font-size: 0.95rem; color: #f59e0b; font-weight: 700;">Rp 0</h4>
+                                </div>
                             </div>
                         </div>
                     </div>
