@@ -274,24 +274,11 @@
                                 <p>Kas Keluar</p>
                             </div>
                         </div>
-                        <div class="stat-card" style="padding: 0; display: flex; flex-direction: column; overflow: hidden; background: white; border: 1px solid var(--border-color); border-radius: 12px;">
-                            <div style="padding: 1rem; text-align: center; border-bottom: 1px solid var(--border-color); background: rgba(14, 165, 233, 0.05);">
-                                <p style="margin: 0 0 0.2rem 0; font-size: 0.85rem; color: var(--text-secondary);">Sisa Saldo</p>
-                                <h3 id="stat-sisa-saldo" style="margin: 0; font-size: 1.3rem; color: #0ea5e9; font-weight: 700;">Rp 0</h3>
-                            </div>
-                            <div style="padding: 0.7rem; text-align: center; border-bottom: 1px solid var(--border-color); background: rgba(16, 185, 129, 0.05);">
-                                <p style="margin: 0 0 0.2rem 0; font-size: 0.75rem; color: var(--text-secondary);">Saldo exclude TOP dan Renov</p>
-                                <h4 id="stat-saldo-exclude" style="margin: 0; font-size: 1rem; color: #10b981; font-weight: 700;">Rp 0</h4>
-                            </div>
-                            <div style="display: flex; background: rgba(245, 158, 11, 0.05);">
-                                <div style="flex: 1; padding: 0.7rem; text-align: center; border-right: 1px solid var(--border-color);">
-                                    <p style="margin: 0 0 0.2rem 0; font-size: 0.7rem; color: var(--text-secondary);">Saldo TOP</p>
-                                    <h4 id="stat-saldo-top" style="margin: 0; font-size: 0.95rem; color: #f59e0b; font-weight: 700;">Rp 0</h4>
-                                </div>
-                                <div style="flex: 1; padding: 0.7rem; text-align: center;">
-                                    <p style="margin: 0 0 0.2rem 0; font-size: 0.7rem; color: var(--text-secondary);">Saldo Renov</p>
-                                    <h4 id="stat-saldo-renov" style="margin: 0; font-size: 0.95rem; color: #f59e0b; font-weight: 700;">Rp 0</h4>
-                                </div>
+                        <div class="stat-card" style="cursor: pointer; transition: transform 0.2s;" onclick="openSaldoPopup()" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                            <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;"><i class="ri-wallet-3-line"></i></div>
+                            <div class="stat-details">
+                                <h3 id="stat-sisa-saldo">Rp 0</h3>
+                                <p>Sisa Saldo</p>
                             </div>
                         </div>
                     </div>
@@ -304,51 +291,6 @@
 
 
 
-                    <!-- Planning Saldo Section -->
-                    <div class="glass-card" style="margin-bottom: 2rem;">
-                        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;"><i class="ri-pie-chart-2-line" style="color: var(--primary-color);"></i> Perencanaan Saldo</h2>
-                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1.5rem;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Nama Planning</label>
-                                <input type="text" id="plan-name" class="form-control" placeholder="Contoh: Beli Laptop">
-                            </div>
-                            <div style="flex: 1; min-width: 150px;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Kategori</label>
-                                <input type="text" id="plan-kategori" list="kategori-list" class="form-control" placeholder="Contoh: Renov, TOP">
-                                <datalist id="kategori-list">
-                                    <option value="Renov">
-                                    <option value="TOP">
-                                    <option value="Lainnya">
-                                </datalist>
-                            </div>
-                            <div style="flex: 1; min-width: 200px;">
-                                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Budget (Rp)</label>
-                                <input type="number" id="plan-budget" class="form-control" placeholder="Contoh: 15000000">
-                            </div>
-                            <div>
-                                <button onclick="submitPlanning()" id="btn-submit-plan" class="btn btn-primary"><i class="ri-add-line"></i> Tambah Planning</button>
-                            </div>
-                        </div>
-                        
-                        <div class="table-responsive">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Tanggal</th>
-                                        <th>Planning</th>
-                                        <th>Kategori</th>
-                                        <th>Budget</th>
-                                        <th style="width: 80px;">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="planning-body">
-                                    <tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="ri-loader-4-line ri-spin"></i> Memuat data planning...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        
-                    </div>
 
                     
                     
@@ -448,6 +390,39 @@
 
     <!-- Hidden form for TF upload -->
 
+
+    <!-- Saldo Breakdown Popup -->
+    <div class="overlay" id="saldo-popup-modal">
+        <div class="modal" style="max-width: 420px; width: 90%; border-radius: 16px; overflow: hidden;">
+            <div class="modal-header" style="border-bottom: none; padding: 1.25rem 1.5rem 0.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 600;">Detail Sisa Saldo</h3>
+                <button type="button" class="close-btn" onclick="closeSaldoPopup()"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 0.5rem 1.5rem 1.5rem;">
+                <!-- Sisa Saldo -->
+                <div style="padding: 1rem; text-align: center; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 0.75rem; background: rgba(14, 165, 233, 0.05);">
+                    <p style="margin: 0 0 0.3rem 0; font-size: 0.85rem; color: var(--text-secondary);">Sisa Saldo</p>
+                    <h3 id="popup-sisa-saldo" style="margin: 0; font-size: 1.4rem; color: #0ea5e9; font-weight: 700;">Rp 0</h3>
+                </div>
+                <!-- Saldo exclude TOP dan Renov -->
+                <div style="padding: 0.85rem; text-align: center; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 0.75rem; background: rgba(16, 185, 129, 0.05);">
+                    <p style="margin: 0 0 0.3rem 0; font-size: 0.8rem; color: var(--text-secondary);">Saldo exclude TOP dan Renov</p>
+                    <h4 id="popup-saldo-exclude" style="margin: 0; font-size: 1.15rem; color: #10b981; font-weight: 700;">Rp 0</h4>
+                </div>
+                <!-- Saldo TOP & Renov -->
+                <div style="display: flex; gap: 0.75rem;">
+                    <div style="flex: 1; padding: 0.85rem; text-align: center; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(245, 158, 11, 0.05);">
+                        <p style="margin: 0 0 0.3rem 0; font-size: 0.75rem; color: var(--text-secondary);">Saldo TOP</p>
+                        <h4 id="popup-saldo-top" style="margin: 0; font-size: 1.05rem; color: #f59e0b; font-weight: 700;">Rp 0</h4>
+                    </div>
+                    <div style="flex: 1; padding: 0.85rem; text-align: center; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(245, 158, 11, 0.05);">
+                        <p style="margin: 0 0 0.3rem 0; font-size: 0.75rem; color: var(--text-secondary);">Saldo Renov</p>
+                        <h4 id="popup-saldo-renov" style="margin: 0; font-size: 1.05rem; color: #f59e0b; font-weight: 700;">Rp 0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Unit Details Modal -->
     <div class="overlay" id="unit-details-modal">
@@ -1519,9 +1494,11 @@
             }
         }
 
-        function updateSaldoBreakdown() {
-            if (globalSaldoAkhir === 0) return;
+        function openSaldoPopup() {
+            // Sync popup values with current data
+            document.getElementById('popup-sisa-saldo').innerText = document.getElementById('stat-sisa-saldo').innerText;
             
+            // Calculate breakdown
             let totalBudget = 0;
             let saldoTop = 0;
             let saldoRenov = 0;
@@ -1535,23 +1512,27 @@
             
             let sisaTersedia = globalSaldoAkhir - totalBudget;
             
-            if(document.getElementById('stat-saldo-exclude')) {
-                const elExclude = document.getElementById('stat-saldo-exclude');
-                elExclude.innerText = formatRupiah(sisaTersedia);
-                if(sisaTersedia < 0) {
-                    elExclude.style.color = '#ef4444';
-                    elExclude.parentElement.style.background = 'rgba(239, 68, 68, 0.05)';
-                } else {
-                    elExclude.style.color = '#10b981';
-                    elExclude.parentElement.style.background = 'rgba(16, 185, 129, 0.05)';
-                }
+            const elExclude = document.getElementById('popup-saldo-exclude');
+            elExclude.innerText = formatRupiah(sisaTersedia);
+            if(sisaTersedia < 0) {
+                elExclude.style.color = '#ef4444';
+            } else {
+                elExclude.style.color = '#10b981';
             }
-            if(document.getElementById('stat-saldo-top')) {
-                document.getElementById('stat-saldo-top').innerText = formatRupiah(saldoTop);
-            }
-            if(document.getElementById('stat-saldo-renov')) {
-                document.getElementById('stat-saldo-renov').innerText = formatRupiah(saldoRenov);
-            }
+            
+            document.getElementById('popup-saldo-top').innerText = formatRupiah(saldoTop);
+            document.getElementById('popup-saldo-renov').innerText = formatRupiah(saldoRenov);
+            
+            document.getElementById('saldo-popup-modal').style.display = 'flex';
+        }
+        
+        function closeSaldoPopup() {
+            document.getElementById('saldo-popup-modal').style.display = 'none';
+        }
+
+        function updateSaldoBreakdown() {
+            if (globalSaldoAkhir === 0) return;
+            // No longer updates inline card elements - data is shown in popup only
         }
 
 </script>
