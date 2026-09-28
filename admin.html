@@ -822,7 +822,8 @@
                     queryParam += `&year=${encodeURIComponent(filterYear.value)}`;
                 }
                 
-                const response = await fetch(SCRIPT_URL + '?action=jago_data' + queryParam);
+                const ts = Date.now();
+                const response = await fetch(SCRIPT_URL + '?action=jago_data' + queryParam + '&t=' + ts);
                 const result = await response.json();
                 
                 if (result.success && result.data) {
@@ -1293,7 +1294,8 @@
                 
                 let monthParam = `&month=${encodeURIComponent(combinedMonth)}`;
                 
-                const response = await fetch(`${SCRIPT_URL}?action=neraca_data${monthParam}`);
+                const ts = Date.now();
+                const response = await fetch(`${SCRIPT_URL}?action=neraca_data${monthParam}&t=${ts}`);
                 const result = await response.json();
                 
                 if (result.success && result.data) {
@@ -1391,7 +1393,8 @@
 
         async function fetchPlanningData() {
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=get_planning`);
+                const ts = Date.now();
+                const response = await fetch(`${SCRIPT_URL}?action=get_planning&t=${ts}`);
                 const result = await response.json();
                 if (result.success) {
                     globalPlanningData = result.data;
@@ -1511,12 +1514,13 @@
             // 1. Add budgets from Planning
             globalPlanningData.forEach(plan => {
                 const kat = (plan.kategori || '').toLowerCase();
+                const budgetVal = parseFloat(plan.budget) || 0;
                 if (kat.includes('aph')) {
-                    saldoTopAph += plan.budget;
+                    saldoTopAph += budgetVal;
                 } else if (kat.includes('top')) {
-                    saldoTop += plan.budget;
+                    saldoTop += budgetVal;
                 } else if (kat.includes('renov')) {
-                    saldoRenov += plan.budget;
+                    saldoRenov += budgetVal;
                 }
             });
             
