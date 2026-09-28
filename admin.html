@@ -411,7 +411,7 @@
                         <h4 id="popup-saldo-top" style="margin: 0; font-size: 0.95rem; color: #f59e0b; font-weight: 700;">Rp 0</h4>
                     </div>
                     <div style="flex: 1; padding: 0.65rem; text-align: center; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(245, 158, 11, 0.05);">
-                        <p style="margin: 0 0 0.3rem 0; font-size: 0.7rem; color: var(--text-secondary);">Pengeluaran TOP APH</p>
+                        <p style="margin: 0 0 0.3rem 0; font-size: 0.7rem; color: var(--text-secondary);">Saldo TOP APH</p>
                         <h4 id="popup-saldo-top-aph" style="margin: 0; font-size: 0.95rem; color: #f59e0b; font-weight: 700;">Rp 0</h4>
                     </div>
                     <div style="flex: 1; padding: 0.65rem; text-align: center; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(245, 158, 11, 0.05);">
@@ -1512,11 +1512,11 @@
             globalCategoryData.forEach(cat => {
                 const kat = (cat.kategori || '').toLowerCase();
                 if (kat.includes('aph')) {
-                    expenseTopAph += (cat.expense || 0);
+                    expenseTopAph += (cat.saldo || 0); // Using saldo for APH as requested
                 } else if (kat === 'top' || kat.includes(' top ') || kat.startsWith('top ') || kat.endsWith(' top')) {
-                    expenseTop += (cat.expense || 0);
+                    expenseTop += (cat.expense || 0); // Using expense for TOP
                 } else if (kat.includes('renov')) {
-                    expenseRenov += (cat.expense || 0);
+                    expenseRenov += (cat.expense || 0); // Using expense for Renov
                 }
             });
             
