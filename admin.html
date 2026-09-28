@@ -404,11 +404,6 @@
                     <p style="margin: 0 0 0.3rem 0; font-size: 0.85rem; color: var(--text-secondary);">Sisa Saldo</p>
                     <h3 id="popup-sisa-saldo" style="margin: 0; font-size: 1.4rem; color: #0ea5e9; font-weight: 700;">Rp 0</h3>
                 </div>
-                <!-- Saldo exclude TOP dan Renov -->
-                <div style="padding: 0.85rem; text-align: center; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 0.75rem; background: rgba(16, 185, 129, 0.05);">
-                    <p style="margin: 0 0 0.3rem 0; font-size: 0.8rem; color: var(--text-secondary);">Saldo exclude TOP, TOP APH, & Renov</p>
-                    <h4 id="popup-saldo-exclude" style="margin: 0; font-size: 1.15rem; color: #10b981; font-weight: 700;">Rp 0</h4>
-                </div>
                 <!-- Saldo TOP & Renov -->
                 <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
                     <div style="flex: 1; padding: 0.65rem; text-align: center; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(245, 158, 11, 0.05);">
@@ -1537,16 +1532,6 @@
                     saldoRenov += (cat.saldo || 0);
                 }
             });
-            
-            let sisaTersedia = globalSaldoAkhir - (saldoTop + saldoTopAph + saldoRenov);
-            
-            const elExclude = document.getElementById('popup-saldo-exclude');
-            elExclude.innerText = formatRupiah(sisaTersedia);
-            if(sisaTersedia < 0) {
-                elExclude.style.color = '#ef4444';
-            } else {
-                elExclude.style.color = '#10b981';
-            }
             
             document.getElementById('popup-saldo-top').innerText = formatRupiah(saldoTop);
             document.getElementById('popup-saldo-top-aph').innerText = formatRupiah(saldoTopAph);
