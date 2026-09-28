@@ -1508,16 +1508,30 @@
             // Sync popup values with current data
             document.getElementById('popup-sisa-saldo').innerText = document.getElementById('stat-sisa-saldo').innerText;
             
-            // Calculate breakdown from globalCategoryData based on selected month
+            // Calculate breakdown from globalPlanningData and globalCategoryData
             let saldoTop = 0;
             let saldoTopAph = 0;
             let saldoRenov = 0;
             
+            // 1. Add budgets from Planning
+            globalPlanningData.forEach(plan => {
+                const kat = (plan.kategori || '').toLowerCase();
+                if (kat.includes('aph')) {
+                    saldoTopAph += plan.budget;
+                } else if (kat.includes('top')) {
+                    saldoTop += plan.budget;
+                } else if (kat.includes('renov')) {
+                    saldoRenov += plan.budget;
+                }
+            });
+            
+            // 2. Add income/expense (saldo) from Category Data
             globalCategoryData.forEach(cat => {
                 const kat = (cat.kategori || '').toLowerCase();
-                if (kat.includes('top aph')) {
+                // We use 'aph' to catch 'TOP APH' or just 'APH'
+                if (kat.includes('aph')) {
                     saldoTopAph += (cat.saldo || 0);
-                } else if (kat.includes('top')) {
+                } else if (kat === 'top' || kat.includes(' top ') || kat.startsWith('top ') || kat.endsWith(' top')) {
                     saldoTop += (cat.saldo || 0);
                 } else if (kat.includes('renov')) {
                     saldoRenov += (cat.saldo || 0);
