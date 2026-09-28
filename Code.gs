@@ -115,7 +115,10 @@ function doGet(e) {
     var hMap = {};
     if (jagoData.length > headerRowIndex) {
       for (var c = 0; c < jagoData[headerRowIndex].length; c++) {
-        hMap[String(jagoData[headerRowIndex][c]).toLowerCase().replace(/\s+/g, ' ').trim()] = c;
+        var key = String(jagoData[headerRowIndex][c]).toLowerCase().replace(/\s+/g, ' ').trim();
+        if (hMap[key] === undefined && key !== '') {
+          hMap[key] = c;
+        }
       }
     }
     
@@ -190,6 +193,15 @@ function doGet(e) {
       if (amount > 0) trendData[trendKey].income += amount;
       if (amount < 0) trendData[trendKey].expense += Math.abs(amount);
       
+      if (!categorySummary[kategori]) categorySummary[kategori] = { count: 0, total: 0, income: 0, expense: 0 };
+      categorySummary[kategori].count += 1;
+      if (amount > 0) {
+          categorySummary[kategori].income += amount;
+      } else if (amount < 0) {
+          categorySummary[kategori].expense += Math.abs(amount);
+          categorySummary[kategori].total += Math.abs(amount); // backward compatibility
+      }
+      
       if (amount < 0) { // Only count expenses for summaries
         var absAmount = Math.abs(amount);
         
@@ -203,11 +215,6 @@ function doGet(e) {
             amount: absAmount,
             kategori: kategori
         });
-        
-        // Category summary
-        if (!categorySummary[kategori]) categorySummary[kategori] = { count: 0, total: 0 };
-        categorySummary[kategori].count += 1;
-        categorySummary[kategori].total += absAmount;
         
         // Deteksi Tagihan Rutin
         var combinedText = (details + ' ' + notes).toLowerCase();
@@ -224,7 +231,14 @@ function doGet(e) {
     
     var resultCategory = [];
     for (var c in categorySummary) {
-      resultCategory.push({ kategori: c, count: categorySummary[c].count, total: categorySummary[c].total });
+      resultCategory.push({ 
+          kategori: c, 
+          count: categorySummary[c].count, 
+          total: categorySummary[c].total,
+          income: categorySummary[c].income,
+          expense: categorySummary[c].expense,
+          saldo: categorySummary[c].income - categorySummary[c].expense
+      });
     }
     
     var resultTrend = [];
@@ -1294,7 +1308,10 @@ function calculateNeraca(jagoData, filterMonth) {
   var headers = jagoData.length > headerRowIndex ? jagoData[headerRowIndex] : [];
   var hMap = {};
   for (var c = 0; c < headers.length; c++) {
-    hMap[String(headers[c]).toLowerCase().replace(/\s+/g, ' ').trim()] = c;
+    var key = String(headers[c]).toLowerCase().replace(/\s+/g, ' ').trim();
+    if (hMap[key] === undefined && key !== '') {
+      hMap[key] = c;
+    }
   }
   
   if (hMap['tanggal'] !== undefined) dateColIdx = hMap['tanggal'];
