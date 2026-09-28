@@ -407,7 +407,7 @@
                 <!-- Saldo TOP & Renov -->
                 <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
                     <div style="flex: 1; padding: 0.65rem; text-align: center; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(245, 158, 11, 0.05);">
-                        <p style="margin: 0 0 0.3rem 0; font-size: 0.7rem; color: var(--text-secondary);">Pengeluaran TOP</p>
+                        <p style="margin: 0 0 0.3rem 0; font-size: 0.7rem; color: var(--text-secondary);">Saldo TOP</p>
                         <h4 id="popup-saldo-top" style="margin: 0; font-size: 0.95rem; color: #f59e0b; font-weight: 700;">Rp 0</h4>
                     </div>
                     <div style="flex: 1; padding: 0.65rem; text-align: center; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(245, 158, 11, 0.05);">
@@ -415,7 +415,7 @@
                         <h4 id="popup-saldo-top-aph" style="margin: 0; font-size: 0.95rem; color: #f59e0b; font-weight: 700;">Rp 0</h4>
                     </div>
                     <div style="flex: 1; padding: 0.65rem; text-align: center; border: 1px solid var(--border-color); border-radius: 12px; background: rgba(245, 158, 11, 0.05);">
-                        <p style="margin: 0 0 0.3rem 0; font-size: 0.7rem; color: var(--text-secondary);">Pengeluaran Renov</p>
+                        <p style="margin: 0 0 0.3rem 0; font-size: 0.7rem; color: var(--text-secondary);">Saldo Renov</p>
                         <h4 id="popup-saldo-renov" style="margin: 0; font-size: 0.95rem; color: #f59e0b; font-weight: 700;">Rp 0</h4>
                     </div>
                 </div>
@@ -1503,26 +1503,38 @@
             // Sync popup values with current data
             document.getElementById('popup-sisa-saldo').innerText = document.getElementById('stat-sisa-saldo').innerText;
             
-            // Calculate breakdown from globalPlanningData and globalCategoryData
-            // Calculate expenses from globalCategoryData
-            let expenseTop = 0;
-            let expenseTopAph = 0;
-            let expenseRenov = 0;
+            // Calculate true Saldo by combining Planning Budgets and Category Saldos
+            let saldoTop = 0;
+            let saldoTopAph = 0;
+            let saldoRenov = 0;
             
-            globalCategoryData.forEach(cat => {
-                const kat = (cat.kategori || '').toLowerCase();
+            // 1. Add budgets from Planning
+            globalPlanningData.forEach(plan => {
+                const kat = (plan.kategori || '').toLowerCase();
                 if (kat.includes('aph')) {
-                    expenseTopAph += (cat.saldo || 0); // Using saldo for APH as requested
-                } else if (kat === 'top' || kat.includes(' top ') || kat.startsWith('top ') || kat.endsWith(' top')) {
-                    expenseTop += (cat.expense || 0); // Using expense for TOP
+                    saldoTopAph += plan.budget;
+                } else if (kat.includes('top')) {
+                    saldoTop += plan.budget;
                 } else if (kat.includes('renov')) {
-                    expenseRenov += (cat.expense || 0); // Using expense for Renov
+                    saldoRenov += plan.budget;
                 }
             });
             
-            document.getElementById('popup-saldo-top').innerText = formatRupiah(expenseTop);
-            document.getElementById('popup-saldo-top-aph').innerText = formatRupiah(expenseTopAph);
-            document.getElementById('popup-saldo-renov').innerText = formatRupiah(expenseRenov);
+            // 2. Add income/expense (saldo) from Category Data
+            globalCategoryData.forEach(cat => {
+                const kat = (cat.kategori || '').toLowerCase();
+                if (kat.includes('aph')) {
+                    saldoTopAph += (cat.saldo || 0);
+                } else if (kat === 'top' || kat.includes(' top ') || kat.startsWith('top ') || kat.endsWith(' top')) {
+                    saldoTop += (cat.saldo || 0);
+                } else if (kat.includes('renov')) {
+                    saldoRenov += (cat.saldo || 0);
+                }
+            });
+            
+            document.getElementById('popup-saldo-top').innerText = formatRupiah(saldoTop);
+            document.getElementById('popup-saldo-top-aph').innerText = formatRupiah(saldoTopAph);
+            document.getElementById('popup-saldo-renov').innerText = formatRupiah(saldoRenov);
             
             document.getElementById('saldo-popup-modal').style.display = 'flex';
         }
