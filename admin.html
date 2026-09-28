@@ -448,9 +448,10 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
         // API Settings
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhEeRwGtQQln6mKrXSOrlq6sNsX1Ji-tCjuRXhM_TEMd-A_jLCtEtabqdif6Gaj0Ea/exec';
+        const SCRIPT_URL = CONFIG.SCRIPT_URL;
         
         function switchTab(tabId) {
             document.getElementById('nav-dashboard').classList.remove('active');
@@ -1054,14 +1055,7 @@
             const insightText = document.getElementById('ai-insight-text');
             if (!insightText) return;
             
-            if (!result.data || result.data.length === 0) {
-                insightText.innerText = "Belum ada data keuangan yang cukup untuk dianalisis pada periode ini.";
-                return;
-            }
-            
-            let totalExpense = result.data.reduce((acc, curr) => acc + curr.total, 0);
-            let topUnit = result.data.reduce((prev, current) => (prev.total > current.total) ? prev : current);
-            let topKategori = result.categoryData && result.categoryData.length > 0 ? result.categoryData.reduce((prev, current) => (prev.total > current.total) ? prev : current) : null;
+            let totalExpense = result.data ? result.data.reduce((acc, curr) => acc + curr.total, 0) : 0;
             
             let totalIncome = 0;
             if (result.trendData) {
@@ -1071,8 +1065,16 @@
             }
             
             // Update Overview Cards
-            document.getElementById('stat-kas-masuk').innerText = formatRupiah(totalIncome);
-            document.getElementById('stat-kas-keluar').innerText = formatRupiah(totalExpense);
+            if (document.getElementById('stat-kas-masuk')) document.getElementById('stat-kas-masuk').innerText = formatRupiah(totalIncome);
+            if (document.getElementById('stat-kas-keluar')) document.getElementById('stat-kas-keluar').innerText = formatRupiah(totalExpense);
+            
+            if (!result.data || result.data.length === 0) {
+                insightText.innerText = "Belum ada data keuangan yang cukup untuk dianalisis pada periode ini.";
+                return;
+            }
+            
+            let topUnit = result.data.reduce((prev, current) => (prev.total > current.total) ? prev : current);
+            let topKategori = result.categoryData && result.categoryData.length > 0 ? result.categoryData.reduce((prev, current) => (prev.total > current.total) ? prev : current) : null;
             
             let insightMsg = `Pada periode <strong>${result.currentMonth}</strong>, tercatat kas masuk sebesar <strong>${formatRupiah(totalIncome)}</strong> dan kas keluar sebesar <strong>${formatRupiah(totalExpense)}</strong>.<br>`;
             

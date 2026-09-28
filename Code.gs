@@ -5,15 +5,42 @@ function paksaIzin() {
   DriveApp.createFile("test", "test", MimeType.PLAIN_TEXT).setTrashed(true);
 }
 
+function parseSafeFloat(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  if (typeof val === 'number') return val;
+  var str = val.toString().replace(/rp/ig, '').trim();
+  
+  var lastComma = str.lastIndexOf(',');
+  var lastDot = str.lastIndexOf('.');
+  
+  if (lastComma !== -1 && lastDot !== -1) {
+    if (lastDot > lastComma) {
+      str = str.replace(/,/g, '');
+    } else {
+      str = str.replace(/\./g, '');
+      str = str.replace(/,/g, '.');
+    }
+  } else if (lastDot !== -1) {
+    var parts = str.split('.');
+    if (parts[parts.length - 1].length === 3) str = str.replace(/\./g, '');
+  } else if (lastComma !== -1) {
+    var parts = str.split(',');
+    if (parts[parts.length - 1].length === 3) str = str.replace(/,/g, '');
+    else str = str.replace(/,/g, '.');
+  }
+  
+  str = str.replace(/[^0-9.-]/g, '');
+  return parseFloat(str) || 0;
+}
+
 // FUNGSI AUTO-UPDATE JIKA ADA PERUBAHAN MANUAL DI SHEET
 function onEdit(e) {
   if (!e) return;
   var sheet = e.range.getSheet();
-  if (sheet.getName() === 'REKAPAN JAGO WEB') {
+  if (sheet.getName() === 'REKAPAN JAGO WEB' || sheet.getName() === 'NEW MASTER') {
     var header = sheet.getRange(1, e.range.getColumn()).getValue();
-    if (String(header).toLowerCase().trim() === 'unit') {
-      try { updateNeracaKeuangan(); } catch(err) {}
-    }
+    // Jika New Master header row bukan 1, updateNeracaKeuangan tetap bisa dipanggil.
+    try { updateNeracaKeuangan(); } catch(err) {}
   } else if (sheet.getName() === 'NERACA KEUANGAN WEB' && e.range.getColumn() === 5 && e.range.getRow() === 2) {
     try { updateNeracaKeuangan(); } catch(err) {}
   }
@@ -50,8 +77,8 @@ function doGet(e) {
     rows.reverse();
     return ContentService.createTextOutput(JSON.stringify({success: true, data: rows})).setMimeType(ContentService.MimeType.JSON);
   } else if (action === 'jago_data') {
-    var jagoSheet = ss.getSheetByName('REKAPAN JAGO WEB');
-    if (!jagoSheet) return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Sheet REKAPAN JAGO tidak ditemukan'})).setMimeType(ContentService.MimeType.JSON);
+    var jagoSheet = ss.getSheetByName('NEW MASTER') || ss.getSheetByName('REKAPAN JAGO WEB');
+    if (!jagoSheet) return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Sheet NEW MASTER / REKAPAN JAGO tidak ditemukan'})).setMimeType(ContentService.MimeType.JSON);
     
     var CUTOFF_DATE = new Date(2026, 6, 30);
     var filterMonth = e.parameter.month;
@@ -75,21 +102,31 @@ function doGet(e) {
     }
 
     var jagoData = jagoSheet.getDataRange().getValues();
+    
+    var headerRowIndex = 0;
+    for (var r = 0; r < Math.min(10, jagoData.length); r++) {
+      var rowStr = jagoData[r].map(function(c) { return String(c).toLowerCase().replace(/\s+/g, ' ').trim(); }).join(" ");
+      if (rowStr.indexOf("kas masuk") !== -1 && (rowStr.indexOf("tanggal") !== -1 || rowStr.indexOf("date & time") !== -1)) {
+        headerRowIndex = r;
+        break;
+      }
+    }
+    
     var hMap = {};
-    if (jagoData.length > 0) {
-      for (var c = 0; c < jagoData[0].length; c++) {
-        hMap[String(jagoData[0][c]).toLowerCase().trim()] = c;
+    if (jagoData.length > headerRowIndex) {
+      for (var c = 0; c < jagoData[headerRowIndex].length; c++) {
+        hMap[String(jagoData[headerRowIndex][c]).toLowerCase().replace(/\s+/g, ' ').trim()] = c;
       }
     }
     
     // Default fallback if headers are missing
-    var colDate = hMap['date & time'] !== undefined ? hMap['date & time'] : 0;
+    var colDate = hMap['tanggal'] !== undefined ? hMap['tanggal'] : (hMap['date & time'] !== undefined ? hMap['date & time'] : 0);
     var colMasuk = hMap['kas masuk'] !== undefined ? hMap['kas masuk'] : 4;
     var colKeluar = hMap['kas keluar'] !== undefined ? hMap['kas keluar'] : 5;
     var colUnit = hMap['unit'] !== undefined ? hMap['unit'] : 7;
     var colKategori = hMap['kategori'] !== undefined ? hMap['kategori'] : 8;
-    var colDetails = hMap['transaction details'] !== undefined ? hMap['transaction details'] : 2;
-    var colNotes = hMap['notes'] !== undefined ? hMap['notes'] : 3;
+    var colDetails = hMap['rincian transaksi'] !== undefined ? hMap['rincian transaksi'] : (hMap['transaction details'] !== undefined ? hMap['transaction details'] : 2);
+    var colNotes = hMap['pic'] !== undefined ? hMap['pic'] : (hMap['notes'] !== undefined ? hMap['notes'] : 3);
     
     var isTwoColumnMode = (hMap['kas masuk'] !== undefined && hMap['kas keluar'] !== undefined);
     
@@ -100,7 +137,7 @@ function doGet(e) {
     var monthsSet = {};
     var yearsSet = {};
     
-    for (var k = 1; k < jagoData.length; k++) {
+    for (var k = headerRowIndex + 1; k < jagoData.length; k++) {
       var rowDate = parseDateSafe(jagoData[k][colDate]);
       if (!rowDate || rowDate < CUTOFF_DATE) continue;
       
@@ -117,13 +154,13 @@ function doGet(e) {
       var kategori = 'Lainnya';
       
       if (isTwoColumnMode) {
-        var masukVal = parseFloat(jagoData[k][colMasuk]) || 0;
-        var keluarVal = parseFloat(jagoData[k][colKeluar]) || 0;
+        var masukVal = parseSafeFloat(jagoData[k][colMasuk]);
+        var keluarVal = parseSafeFloat(jagoData[k][colKeluar]);
         amount = (masukVal > 0) ? masukVal : ((keluarVal > 0) ? -keluarVal : 0);
         unit = jagoData[k][colUnit] || 'Tanpa Unit';
         kategori = jagoData[k][colKategori] || 'Lainnya';
       } else {
-        amount = parseFloat(jagoData[k][4]) || 0;
+        amount = parseSafeFloat(jagoData[k][4]);
         unit = jagoData[k][6] || 'Tanpa Unit';
         kategori = jagoData[k][7] || 'Lainnya';
       }
@@ -215,7 +252,7 @@ function doGet(e) {
         currentYear: currentYear
     })).setMimeType(ContentService.MimeType.JSON);
   } else if (action === 'neraca_data') {
-    var jagoSheet = ss.getSheetByName('REKAPAN JAGO WEB');
+    var jagoSheet = ss.getSheetByName('NEW MASTER') || ss.getSheetByName('REKAPAN JAGO WEB');
     if (!jagoSheet) {
       return ContentService.createTextOutput(JSON.stringify({success: false, message: 'Sheet REKAPAN JAGO tidak ditemukan.'})).setMimeType(ContentService.MimeType.JSON);
     }
@@ -245,7 +282,7 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
   } else if (action === 'debug_jago') {
-    var jagoSheet = ss.getSheetByName('REKAPAN JAGO WEB');
+    var jagoSheet = ss.getSheetByName('NEW MASTER') || ss.getSheetByName('REKAPAN JAGO WEB');
     var jagoData = jagoSheet ? jagoSheet.getDataRange().getValues() : [];
     var filterMonth = e.parameter.month || "Semua Bulan";
     
@@ -1244,12 +1281,31 @@ function calculateNeraca(jagoData, filterMonth) {
     return null;
   }
 
+  var headerRowIndex = 0;
+  for (var r = 0; r < Math.min(10, jagoData.length); r++) {
+    var rowStr = jagoData[r].map(function(c) { return String(c).toLowerCase().replace(/\s+/g, ' ').trim(); }).join(" ");
+    if (rowStr.indexOf("kas masuk") !== -1 && (rowStr.indexOf("tanggal") !== -1 || rowStr.indexOf("date & time") !== -1)) {
+      headerRowIndex = r;
+      break;
+    }
+  }
+
+  var dateColIdx = 0;
+  var headers = jagoData.length > headerRowIndex ? jagoData[headerRowIndex] : [];
+  var hMap = {};
+  for (var c = 0; c < headers.length; c++) {
+    hMap[String(headers[c]).toLowerCase().replace(/\s+/g, ' ').trim()] = c;
+  }
+  
+  if (hMap['tanggal'] !== undefined) dateColIdx = hMap['tanggal'];
+  else if (hMap['date & time'] !== undefined) dateColIdx = hMap['date & time'];
+
   var allValidData = [];
   var monthsSet = {};
   
-  for (var i = 1; i < jagoData.length; i++) {
-    if (!jagoData[i][0] || jagoData[i][0] === "") continue;
-    var rowDate = parseDateSafe(jagoData[i][0]);
+  for (var i = headerRowIndex + 1; i < jagoData.length; i++) {
+    if (!jagoData[i][dateColIdx] || jagoData[i][dateColIdx] === "") continue;
+    var rowDate = parseDateSafe(jagoData[i][dateColIdx]);
     if (rowDate && rowDate >= CUTOFF_DATE) {
       allValidData.push({row: jagoData[i], date: rowDate});
       
@@ -1291,29 +1347,9 @@ function calculateNeraca(jagoData, filterMonth) {
       return { data: [["Tidak ada data untuk " + selectedFilter]], availableMonths: availableMonths }; 
   }
   
-  var headers = jagoData.length > 0 ? jagoData[0] : [];
-  var hMap = {};
-  for (var c = 0; c < headers.length; c++) {
-    hMap[String(headers[c]).toLowerCase().trim()] = c;
-  }
+  // headers already defined above
   
-  function parseSafeFloat(val) {
-    if (val === null || val === undefined || val === '') return 0;
-    if (typeof val === 'number') return val;
-    var str = val.toString().replace(/rp/ig, '').trim();
-    if (str.indexOf('.') !== -1 && str.indexOf(',') !== -1) {
-      str = str.replace(/\./g, '').replace(/,/g, '.');
-    } else if (str.indexOf('.') !== -1) {
-      var parts = str.split('.');
-      if (parts[parts.length - 1].length === 3) str = str.replace(/\./g, '');
-    } else if (str.indexOf(',') !== -1) {
-      var parts = str.split(',');
-      if (parts[parts.length - 1].length === 3) str = str.replace(/,/g, '');
-      else str = str.replace(/,/g, '.');
-    }
-    str = str.replace(/[^0-9.-]/g, '');
-    return parseFloat(str) || 0;
-  }
+  // Removed local parseSafeFloat, using global parseSafeFloat
   
   var isTwoColumnMode = (hMap['kas masuk'] !== undefined && hMap['kas keluar'] !== undefined);
   var balColIdx = hMap['saldo'] !== undefined ? hMap['saldo'] : (isTwoColumnMode ? 6 : 5);
@@ -1407,52 +1443,25 @@ function calculateNeraca(jagoData, filterMonth) {
   }
 
   var saldoAwal = 0;
-  if (selectedFilter === "Semua Bulan") {
-      if (isNewestToOldest) {
-          for (var i = filteredData.length - 1; i >= 0; i--) {
-              if (filteredData[i][balColIdx] !== "" && filteredData[i][balColIdx] !== undefined) {
-                  saldoAwal = parseSafeFloat(filteredData[i][balColIdx]) - trueAmounts[i];
-                  break;
-              }
-          }
+  var hasSaldoCol = (hMap['saldo'] !== undefined);
+  
+  if (!hasSaldoCol) {
+      if (selectedFilter === "Semua Bulan") {
+          saldoAwal = 0;
       } else {
-          for (var i = 0; i < filteredData.length; i++) {
-              if (filteredData[i][balColIdx] !== "" && filteredData[i][balColIdx] !== undefined) {
-                  saldoAwal = parseSafeFloat(filteredData[i][balColIdx]) - trueAmounts[i];
-                  break;
-              }
-          }
-      }
-  } else {
-      var parts = selectedFilter.split(" ");
-      var targetMonthStart = new Date(parseInt(parts[1]), getMonthIndex(parts[0]), 1);
-      var foundPrevBalance = false;
-      
-      if (isNewestToOldest) {
+          var parts = selectedFilter.split(" ");
+          var targetMonthStart = new Date(parseInt(parts[1]), getMonthIndex(parts[0]), 1);
+          var sumPrev = 0;
           for (var i = 0; i < allValidData.length; i++) {
               if (allValidData[i].date < targetMonthStart) {
-                  var bal = allValidData[i].row[balColIdx];
-                  if (bal !== "" && bal !== undefined) {
-                      saldoAwal = parseSafeFloat(bal);
-                      foundPrevBalance = true;
-                      break;
-                  }
+                  var amt = getRawAmount(allValidData[i].row);
+                  sumPrev += amt;
               }
           }
-      } else {
-          for (var i = allValidData.length - 1; i >= 0; i--) {
-              if (allValidData[i].date < targetMonthStart) {
-                  var bal = allValidData[i].row[balColIdx];
-                  if (bal !== "" && bal !== undefined) {
-                      saldoAwal = parseSafeFloat(bal);
-                      foundPrevBalance = true;
-                      break;
-                  }
-              }
-          }
+          saldoAwal = sumPrev;
       }
-      
-      if (!foundPrevBalance) {
+  } else {
+      if (selectedFilter === "Semua Bulan") {
           if (isNewestToOldest) {
               for (var i = filteredData.length - 1; i >= 0; i--) {
                   if (filteredData[i][balColIdx] !== "" && filteredData[i][balColIdx] !== undefined) {
@@ -1465,6 +1474,52 @@ function calculateNeraca(jagoData, filterMonth) {
                   if (filteredData[i][balColIdx] !== "" && filteredData[i][balColIdx] !== undefined) {
                       saldoAwal = parseSafeFloat(filteredData[i][balColIdx]) - trueAmounts[i];
                       break;
+                  }
+              }
+          }
+      } else {
+          var parts = selectedFilter.split(" ");
+          var targetMonthStart = new Date(parseInt(parts[1]), getMonthIndex(parts[0]), 1);
+          var foundPrevBalance = false;
+          
+          if (isNewestToOldest) {
+              for (var i = 0; i < allValidData.length; i++) {
+                  if (allValidData[i].date < targetMonthStart) {
+                      var bal = allValidData[i].row[balColIdx];
+                      if (bal !== "" && bal !== undefined) {
+                          saldoAwal = parseSafeFloat(bal);
+                          foundPrevBalance = true;
+                          break;
+                      }
+                  }
+              }
+          } else {
+              for (var i = allValidData.length - 1; i >= 0; i--) {
+                  if (allValidData[i].date < targetMonthStart) {
+                      var bal = allValidData[i].row[balColIdx];
+                      if (bal !== "" && bal !== undefined) {
+                          saldoAwal = parseSafeFloat(bal);
+                          foundPrevBalance = true;
+                          break;
+                      }
+                  }
+              }
+          }
+          
+          if (!foundPrevBalance) {
+              if (isNewestToOldest) {
+                  for (var i = filteredData.length - 1; i >= 0; i--) {
+                      if (filteredData[i][balColIdx] !== "" && filteredData[i][balColIdx] !== undefined) {
+                          saldoAwal = parseSafeFloat(filteredData[i][balColIdx]) - trueAmounts[i];
+                          break;
+                      }
+                  }
+              } else {
+                  for (var i = 0; i < filteredData.length; i++) {
+                      if (filteredData[i][balColIdx] !== "" && filteredData[i][balColIdx] !== undefined) {
+                          saldoAwal = parseSafeFloat(filteredData[i][balColIdx]) - trueAmounts[i];
+                          break;
+                      }
                   }
               }
           }
@@ -1537,7 +1592,7 @@ function calculateNeraca(jagoData, filterMonth) {
 
 function updateNeracaKeuangan() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var jagoSheet = ss.getSheetByName('REKAPAN JAGO WEB');
+  var jagoSheet = ss.getSheetByName('NEW MASTER') || ss.getSheetByName('REKAPAN JAGO WEB');
   var neracaSheet = ss.getSheetByName('NERACA KEUANGAN WEB');
   
   if (!jagoSheet) return;
