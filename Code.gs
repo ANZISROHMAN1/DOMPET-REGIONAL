@@ -609,6 +609,8 @@ function onOpen() {
       .addItem('📄 Import Rekapan Jago (PDF)', 'showImportDialog')
       .addItem('🎨 Pisahkan Kolom Kas Masuk & Keluar', 'pisahkanKolomKasMasukKeluar')
       .addItem('🔄 Refresh Unit & Kategori (Deteksi DB)', 'refreshUnitFromDB')
+      .addItem('⚙️ Install Auto-Reset Tagihan (Tgl 1)', 'installMonthlyTrigger')
+      .addItem('⚠️ Manual Reset Tagihan (SEKARANG)', 'resetTagihanRutinBulanan')
       .addToUi();
 }
 
@@ -1695,3 +1697,61 @@ function getPlanningData() {
   }
   return plans;
 }
+
+// --- AUTO RESET TAGIHAN RUTIN BULANAN ---
+function resetTagihanRutinBulanan() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheetTagihan = ss.getSheetByName('TAGIHAN RUTIN WEB');
+  if (!sheetTagihan) return;
+  
+  var allData = sheetTagihan.getDataRange().getValues();
+  if (allData.length < 2) return;
+  
+  var headerRowIndex = 0;
+  for (var i = 0; i < Math.min(5, allData.length); i++) {
+    if (String(allData[i][0]).trim() !== '' || String(allData[i][1]).trim() !== '') {
+      headerRowIndex = i;
+      break;
+    }
+  }
+  
+  var headers = allData[headerRowIndex];
+  var statusCol = -1;
+  var buktiCol = -1;
+  for (var i = 0; i < headers.length; i++) {
+    var h = String(headers[i]).toLowerCase();
+    if (h.includes('status')) statusCol = i + 1;
+    if (h.includes('bukti') || h.includes('transfer') || h.includes('tf')) buktiCol = i + 1;
+  }
+  
+  if (statusCol === -1 || buktiCol === -1) return;
+  
+  var lastRow = sheetTagihan.getLastRow();
+  if (lastRow > headerRowIndex + 1) {
+    var numRows = lastRow - (headerRowIndex + 1);
+    
+    // Set status menjadi "Belum Dibayar"
+    var statusValues = new Array(numRows).fill(['Belum Dibayar']);
+    sheetTagihan.getRange(headerRowIndex + 2, statusCol, numRows, 1).setValues(statusValues);
+    
+    // Kosongkan Bukti TF
+    var buktiValues = new Array(numRows).fill(['']);
+    sheetTagihan.getRange(headerRowIndex + 2, buktiCol, numRows, 1).setValues(buktiValues);
+  }
+}
+
+function installMonthlyTrigger() {
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'resetTagihanRutinBulanan') {
+      return; // Trigger sudah ada
+    }
+  }
+  
+  ScriptApp.newTrigger('resetTagihanRutinBulanan')
+    .timeBased()
+    .onMonthDay(1)
+    .atHour(1) // Berjalan pada jam 1 pagi di tanggal 1 setiap bulannya
+    .create();
+}
+
