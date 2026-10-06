@@ -951,7 +951,7 @@ function showImportDialog() {
       <body>
         <div class="container">
           <h3>Upload PDF Rekapan Jago</h3>
-          <p>Pilih file PDF mutasi dari Bank Jago untuk di-import otomatis ke sheet NEW MASTER.</p>
+          <p>Pilih file PDF mutasi dari Bank Jago untuk di-import otomatis ke sheet rekapan jago web.</p>
           <input type="file" id="fileInput" accept="application/pdf" />
           <button onclick="uploadFile()">Import Data</button>
           <div id="status"></div>
@@ -1093,8 +1093,8 @@ function processParsedJagoData(transactions) {
   }
   
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName('NEW MASTER');
-  if (!sheet) throw new Error("Sheet bernama 'NEW MASTER' tidak ditemukan!");
+  var sheet = ss.getSheetByName('rekapan jago web') || ss.getSheetByName('REKAPAN JAGO WEB');
+  if (!sheet) throw new Error("Sheet bernama 'rekapan jago web' tidak ditemukan!");
   
   var maps = getMappings();
   var unitMap = maps.unitMap;
@@ -1103,7 +1103,7 @@ function processParsedJagoData(transactions) {
   var lastRow = sheet.getLastRow();
   var lastColSheet = sheet.getLastColumn();
   
-  // Cari baris header secara dinamis (karena NEW MASTER punya header di baris 4)
+  // Cari baris header secara dinamis
   var topRows = sheet.getRange(1, 1, Math.min(10, Math.max(1, lastRow)), lastColSheet > 0 ? lastColSheet : 1).getValues();
   var headerRow = -1;
   var existingHeaders = [];
@@ -1314,7 +1314,7 @@ function processParsedJagoData(transactions) {
     // Ignore error so it doesn't break import
   }
   
-  return "Berhasil! " + addedCount + " transaksi baru telah di-import ke sheet NEW MASTER.";
+  return "Berhasil! " + addedCount + " transaksi baru telah di-import ke sheet rekapan jago web.";
 }
 
 // Fungsi Otomatis untuk Mengonversi Sheet Lama Menjadi Format 2 Kolom (Kas Masuk & Kas Keluar)
