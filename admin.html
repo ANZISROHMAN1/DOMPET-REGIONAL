@@ -806,6 +806,21 @@
             }
         } 
         function fetchReportData() {
+            const filterMonth = document.getElementById('global-month-filter');
+            const filterYear = document.getElementById('global-year-filter');
+            
+            if (filterMonth && filterMonth.options.length <= 1) {
+                const now = new Date();
+                const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const currentMonthStr = months[now.getMonth()];
+                const currentYearStr = now.getFullYear().toString();
+                
+                filterMonth.innerHTML = `<option value="${currentMonthStr}">${currentMonthStr}</option>`;
+                filterMonth.value = currentMonthStr;
+                filterYear.innerHTML = `<option value="${currentYearStr}">${currentYearStr}</option>`;
+                filterYear.value = currentYearStr;
+            }
+
             fetchJagoData();
             fetchNeracaData();
         }
@@ -883,8 +898,10 @@
                 totalAmount += item.total;
                 totalCount += item.count;
                 
+                let safeTx = encodeURIComponent(item.transactions ? JSON.stringify(item.transactions) : "[]");
+                let safeUnit = encodeURIComponent(item.unit || "");
                 html += `
-                    <tr onclick='showUnitDetails(${item.transactions ? JSON.stringify(item.transactions).replace(/'/g, "&apos;") : "[]"}, "${item.unit}")' style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--border-color)'" onmouseout="this.style.backgroundColor=''">
+                    <tr data-transactions="${safeTx}" data-unit="${safeUnit}" onclick="showUnitDetailsFromElement(this)" style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--border-color)'" onmouseout="this.style.backgroundColor=''">
                         <td style="font-weight: 500;">${item.unit}</td>
                         <td>${item.count} Pengajuan</td>
                         <td style="font-weight: 600; color: var(--success-color);">${formatRupiah(item.total)}</td>
@@ -989,6 +1006,18 @@
 
         function closeUnitDetails() {
             document.getElementById('unit-details-modal').style.display = 'none';
+        }
+        
+        function showUnitDetailsFromElement(el) {
+            try {
+                const txStr = el.getAttribute('data-transactions');
+                const unitStr = el.getAttribute('data-unit');
+                const tx = JSON.parse(decodeURIComponent(txStr));
+                const unit = decodeURIComponent(unitStr);
+                showUnitDetails(tx, unit);
+            } catch (e) {
+                console.error("Error parsing transactions", e);
+            }
         }
         
         function renderCategoryPieChart(categoryData) {
